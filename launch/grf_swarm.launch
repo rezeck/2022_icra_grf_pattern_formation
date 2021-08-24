@@ -1,0 +1,24 @@
+<launch>
+		<arg name="robots" default="100"/>
+		<arg name="groups" default="50:50" />
+		<!-- <arg name="groups" default="80:20" /> -->
+		<arg name="world" default="5"/>
+		<arg name="sensing" default="0.6"/>
+		<arg name="safezone" default="0.6"/>
+		<arg name="seed" default="1"/>
+		<arg name="log" default="true"/>
+		<arg name="gui" default="true"/>
+
+		<node name="$(anon grf_controller)" pkg="2022_icra_grf_pattern_formation" type="2022_icra_grf_pattern_formation_node" output="screen" required="true">
+			<param name="nrobots" value="$(arg robots)"/>
+			<param name="ngroups" value="$(arg groups)"/>
+			<param name="sensing" value="$(arg sensing)"/>
+			<param name="safezone" value="$(arg safezone)"/>
+			<param name="worldsize" value="$(arg world)"/>
+			<param name="seed" value="$(arg seed)"/>
+			<param name="iterations" value="20000"/>
+			<param name="log" value="$(arg log)"/>
+			<param name="gui" value="$(arg gui)"/>
+        	<param name="swarmconf" type="str" command="python3 &quot;$(find 2022_icra_grf_pattern_formation)/world/generator.py&quot; --robots $(arg robots) --groups $(arg groups) --world $(arg world) --sensing $(arg sensing) --seed $(arg seed)"/>
+    	</node>
+</launch>
