@@ -22,8 +22,13 @@
 
 #include <omp.h>
 
+// #define BABYSTEP
+// #define DEBUG_BINDING
+
+
 // #define SHOW_VELOCITY
 // #define SHOW_SENSING
+// #define SHOW_ID
 // #define SHOW_OBSTACLES
 #define SAVE_FIGURES
 #define VISUALIZATION
@@ -48,6 +53,7 @@ public:
     unsigned int bound;
     bool anchor;
     bool bounded;
+    std::vector<unsigned int> anchors;
     double mass;
     std::vector<std::vector<unsigned int>> binding;
     std::vector<unsigned int> orbitals;

@@ -119,15 +119,15 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             r.orbitals.push_back(1); // Number of H
             r.orbitals.push_back(1); // Number of C
             r.orbitals.push_back(0); // Number of S
-            r.mass = 0.03; //0.3;
+            r.mass = 0.03;           //0.3;
         }
         else
         {
             r.bound = 4;
             r.orbitals.push_back(2); // Number of H
-            r.orbitals.push_back(2); // Number of C
+            r.orbitals.push_back(1); // Number of C
             r.orbitals.push_back(1); // Number of S
-            r.mass = 0.04; //0.4;
+            r.mass = 0.04;           //0.4;
         }
         for (int k = 0; k < r.orbitals.size(); k++)
         {
@@ -137,40 +137,64 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         this->states.push_back(r);
     }
     this->states[0].anchor = true;
-    this->states[0].position.x = 0;
-    this->states[0].position.y = 2;
+    this->states[0].position.x = -1.5;
+    this->states[0].position.y = -1.5;
     this->states[0].velocity.x = 0;
     this->states[0].velocity.y = 0;
     this->states[0].mass = 0.5;
     this->states[0].type = 2;
-    this->states[0].bound = 1;
+    this->states[0].bound = 2;
     this->states[0].orbitals[0] = 0;
-    this->states[0].orbitals[1] = 1;
+    this->states[0].orbitals[1] = 2;
     this->states[0].orbitals[2] = 0;
 
     this->states[1].anchor = true;
-    this->states[1].position.x = 0;
-    this->states[1].position.y = -2;
+    this->states[1].position.x = -1.5;
+    this->states[1].position.y = 1.5;
     this->states[1].velocity.x = 0;
     this->states[1].velocity.y = 0;
     this->states[1].mass = 0.5;
     this->states[1].type = 2;
-    this->states[1].bound = 1;
+    this->states[1].bound = 2;
     this->states[1].orbitals[0] = 0;
-    this->states[1].orbitals[1] = 1;
+    this->states[1].orbitals[1] = 2;
     this->states[1].orbitals[2] = 0;
 
     this->states[2].anchor = true;
-    this->states[2].position.x = 0;
-    this->states[2].position.y = 0;
+    this->states[2].position.x = 1.5;
+    this->states[2].position.y = -1.5;
     this->states[2].velocity.x = 0;
     this->states[2].velocity.y = 0;
     this->states[2].mass = 0.5;
     this->states[2].type = 2;
-    this->states[2].bound = 1;
+    this->states[2].bound = 2;
     this->states[2].orbitals[0] = 0;
-    this->states[2].orbitals[1] = 1;
+    this->states[2].orbitals[1] = 2;
     this->states[2].orbitals[2] = 0;
+
+    this->states[3].anchor = true;
+    this->states[3].position.x = 1.5;
+    this->states[3].position.y = 1.5;
+    this->states[3].velocity.x = 0;
+    this->states[3].velocity.y = 0;
+    this->states[3].mass = 0.5;
+    this->states[3].type = 2;
+    this->states[3].bound = 2;
+    this->states[3].orbitals[0] = 0;
+    this->states[3].orbitals[1] = 2;
+    this->states[3].orbitals[2] = 0;
+
+    // this->states[4].anchor = true;
+    // this->states[4].position.x = 0;
+    // this->states[4].position.y = 2;
+    // this->states[4].velocity.x = 0;
+    // this->states[4].velocity.y = 0;
+    // this->states[4].mass = 0.5;
+    // this->states[4].type = 2;
+    // this->states[4].bound = 1;
+    // this->states[4].orbitals[0] = 0;
+    // this->states[4].orbitals[1] = 1;
+    // this->states[4].orbitals[2] = 0;
 
     if (this->gui)
     {
@@ -223,7 +247,8 @@ bool Controller::draw(int step)
             color = cv::Scalar(47, 79, 79);
             break; // dark slate gray
         case 2:
-            color = cv::Scalar(138, 43, 226);
+            // color = cv::Scalar(138, 43, 226);
+            color = cv::Scalar(0, 0, 0);
             break; // blue violet
         case 3:
             color = cv::Scalar(199, 21, 133);
@@ -319,8 +344,10 @@ bool Controller::draw(int step)
                 cv::line(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), cv::Point(350 + c * this->states[this->states[i].binding[k][w]].position.x, 350 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
             }
         }
-        // cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(350 + c * this->states[i].position.x + 4, 350 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
-        //             0.4, CV_RGB(0, 0, 0), 1);
+#ifdef SHOW_ID
+        cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(350 + c * this->states[i].position.x + 4, 350 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
+                    0.4, CV_RGB(0, 0, 0), 1);
+#endif
     }
 
 #ifdef SHOW_OBSTACLES
@@ -408,24 +435,29 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         I = -0.001;
         dist = dist * 0.90;
 
-        for (int k = 0; k < r_i.binding[states_t[i].type].size(); k++)
+        /* For each orbit (k) in the robot (r_i). */
+        for (int k = 0; k < r_i.binding.size(); k++)
         {
-            if (states_t[i].id == r_i.binding[states_t[i].type][k])
+            /* For each robot (y) in the orbit (k). */
+            for (int y = 0; y < r_i.binding[k].size(); y++)
             {
-                if (states_t[i].anchor)
+                if (states_t[i].id == r_i.binding[k][y])
                 {
-                    I = 8;
-                    // dist = dist * 1.5;
-                }
-                else if (states_t[i].bounded == r_i.bounded)
-                {
-                    I = 3;
-                    // dist = dist * 1.4;
-                }
-                else
-                {
-                    I = 3;
-                    // dist = dist * 1.3;
+                    if (states_t[i].anchor)
+                    {
+                        I = 8;
+                        // dist = dist * 1.5;
+                    }
+                    else if (states_t[i].bounded == r_i.bounded)
+                    {
+                        I = 3;
+                        // dist = dist * 1.4;
+                    }
+                    else
+                    {
+                        I = 3;
+                        // dist = dist * 1.3;
+                    }
                 }
             }
         }
@@ -747,7 +779,6 @@ Vector2 Controller::metropolisHastings(Robot r_i, std::vector<Robot> states_t)
         //             r_i.anchor = true;
         //     }
         // }
-
     }
     this->states[(int)r_i.id] = r_i;
 
@@ -761,88 +792,214 @@ bool special_compare(const Robot &a, const Robot &b)
 
 void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
 {
+    /* Create a empty orbital structure - It will be the new r_i orbital structure. */
     std::vector<std::vector<int>> bound;
-    for (int i = 0; i < r_i.orbitals.size(); i++)
+    for (int orb = 0; orb < r_i.orbitals.size(); orb++)
     {
         std::vector<int> t_;
         bound.push_back(t_);
     }
 
     double orbitalDist = this->safezone;
+    /* For each neighborn (n_j) of the robot (r_i): */
+    /* Neighborns list (states_t) are already sorted by distance. */
     for (int i = 0; i < states_t.size(); i++)
     {
+        Robot n_j = states_t[i];
         /* Euclean distance from neighborn i */
-        double dist = this->euclidean(r_i.position, states_t[i].position);
-        // std::cout << "- Evaluating robot # "  << states_t[i].id << " dist " << dist << std::endl;
-        if (dist <= orbitalDist)
-        {
-            bool alreadyBounded = false;
-            bool loopDetection = false;
-            bool enableToBind = false;
-            /* Number of bindings accumulated (fix enableToBind)*/
-            unsigned int nbinding = 0;
-            // take a look on a binding list of neighborn i
-            for (int k = (states_t[i].binding.size() - 1); k >= 0; k--)
-            {
-                // k is the orbital
-                // is my orbital?
-                if (k == r_i.type)
-                {
-                    // is there any room for me?
-                    enableToBind = ((states_t[i].binding[k].size() + nbinding) < states_t[i].orbitals[k]);
-                }
-                for (int y = 0; y < states_t[i].binding[k].size(); y++)
-                {
-                    nbinding++;
-                    if ((states_t[i].binding[k][y]) == r_i.id)
-                    {
-                        alreadyBounded = true;
-                    }
-                    for (int w = 0; w < r_i.binding[k].size(); w++)
-                    {
+        double dist = this->euclidean(r_i.position, n_j.position);
+#ifdef DEBUG_BINDING
+        std::cout << "- Evaluating robot # " << n_j.id << ": " << (int)!(dist > orbitalDist);
+#endif
 
-                        if (states_t[i].binding[k][y] == r_i.binding[k][w])
+        /* If the neighborn (r_j) is out the orbital distance: stop searching. */
+        if (dist > orbitalDist)
+        {
+            break;
+        }
+
+        /* Check if (n_j) has a room for the robot r_i */
+        bool isthereanyroom = false;
+        unsigned int nbindingsofar = 0;
+        /* For each orbital in the of the neighborn (n_j) */
+        for (int k = (n_j.binding.size() - 1); k >= 0; k--)
+        {
+            /* Is k the r_i robot orbital? */
+            if (k == r_i.type)
+            {
+                // is there any room for me?
+                isthereanyroom = ((n_j.binding[k].size() + nbindingsofar) < n_j.orbitals[k]);
+                if (r_i.type == 1 && !isthereanyroom)
+                {
+                    isthereanyroom = ((n_j.binding[k + 1].size() + nbindingsofar) < n_j.orbitals[k + 1]);
+                }
+                break;
+            }
+            // nbindingsofar += n_j.binding[k].size();
+        }
+#ifdef DEBUG_BINDING
+        std::cout << " |  " << (int)isthereanyroom;
+#endif
+
+        /* Check if (n_j) has r_i in the binding list. There are already connected? */
+        bool areweconnected = false;
+        /* For each orbital in the of the neighborn (n_j) */
+        for (int k = (n_j.binding.size() - 1); k >= 0; k--)
+        {
+            if (areweconnected)
+                break;
+            /* For each robot (y) is the orbital k */
+            for (int y = 0; y < n_j.binding[k].size(); y++)
+            {
+                /* Is it me? */
+                if ((n_j.binding[k][y]) == r_i.id)
+                {
+                    areweconnected = true;
+                    break;
+                }
+            }
+        }
+#ifdef DEBUG_BINDING
+        std::cout << " |  " << (int)areweconnected;
+#endif
+
+        /* Check if connecting n_j with r_i create inner cycle. */
+        bool cycledetected = false;
+        /* For each orbital (k) in the neighborn (n_j) */
+        for (int k = (n_j.binding.size() - 1); k >= 0; k--)
+        {
+            if (cycledetected)
+                break;
+            /* For each robot (y) is the orbital (k) */
+            for (int y = 0; y < n_j.binding[k].size(); y++)
+            {
+                /* For each orbital (m) in the robot (r_i) */
+                for (int m = (r_i.binding.size() - 1); m >= 0; m--)
+                {
+                    /* For each robot (x) in the orbital (m) */
+                    for (int w = 0; w < r_i.binding[m].size(); w++)
+                    {
+                        if (n_j.binding[k][y] == r_i.binding[m][w])
                         {
-                            loopDetection = true;
+                            cycledetected = true;
                         }
                     }
                 }
             }
-            if (alreadyBounded || enableToBind && !loopDetection)
-            {
-                bound[states_t[i].type].push_back(states_t[i].id);
-            }
         }
-        else
+#ifdef DEBUG_BINDING
+        std::cout << " |  " << (int)cycledetected << std::endl;
+#endif
+
+        // bool bridging = true && (n_j.anchors.size() > 0) && (r_i.anchors.size() > 0);
+        // for (int s = 0; s < n_j.anchors.size(); s++)
+        // {
+        //     for (int t = 0; t < r_i.anchors.size(); t++)
+        //     {
+        //         if (n_j.anchors[s] == r_i.anchors[t])
+        //         {
+        //             bridging = false;
+        //         }
+        //     }
+        // }
+
+        if (((areweconnected || isthereanyroom) && !cycledetected))
         {
-            break;
+            /* Is orbital (2) filled? */
+            bool isorbitalfilled = (n_j.binding[2].size() > 0);
+            if (isorbitalfilled && (r_i.type == 1))
+            {
+                /* is the robot (r_i) there? */
+                bool amIthere = false;
+                /* For each robot (y) is the orbital k */
+                for (int y = 0; y < n_j.binding[2].size(); y++)
+                {
+                    if (n_j.binding[2][y] == r_i.id)
+                    {
+                        amIthere = true;
+                        break;
+                    }
+                }
+                if (amIthere)
+                {
+                    bound[1].push_back(n_j.id);
+                }
+                else
+                {
+                    bound[2].push_back(n_j.id);
+                }
+            }
+            else
+            {
+                bound[n_j.type].push_back(n_j.id);
+            }
+            // bound[n_j.type].push_back(n_j.id);
         }
     }
 
-    // for (int k = 0; k < r_i.binding.size(); k++)
-    // {
-    //     std::cout << "  -> [" << k << "]: ";
-    //     for (int y = 0; y < bound[k].size(); y++)
-    //     {
-    //         std::cout << bound[k][y] << "  ";
-    //     }
-    //     std::cout << std::endl;
-    // }
+#ifdef DEBUG_BINDING
+    for (int k = 0; k < r_i.binding.size(); k++)
+    {
+        std::cout << "  -> [" << k << "]: ";
+        for (int y = 0; y < bound[k].size(); y++)
+        {
+            std::cout << bound[k][y] << "  ";
+        }
+        std::cout << std::endl;
+    }
+#endif
 
     //Update binding list
     unsigned int num_binding = 0;
-    for (int i = (r_i.binding.size() - 1); i >= 0; i--)
+    /* For each orbital (k) in robot (r_i). */
+    r_i.anchors.clear();
+    for (int k = (r_i.binding.size() - 1); k >= 0; k--)
     {
-        r_i.binding[i].clear();
-        for (int k = 0; k < bound[i].size(); k++)
+        /* Clear history of orbital */
+        r_i.binding[k].clear();
+
+        /* Dropping element next orbital */
+        if ((k == 2) && (bound[k].size() > r_i.orbitals[k]) && (bound[k - 1].size() == 0))
         {
-            if (k < r_i.orbitals[i] && (num_binding < r_i.bound))
+            for (int u = r_i.orbitals[k]; u < bound[k].size(); u++)
             {
-                r_i.binding[i].push_back(bound[i][k]);
+                bound[1].push_back( bound[k][u]);
+                // bound[1].insert(bound[1].begin(), bound[k][u]);
+            }
+        }
+
+        /* For each robot (k) to be add to robot (r_i) orbital (i). */
+        for (int i = 0; i < bound[k].size(); i++)
+        {
+            if (i < r_i.orbitals[k] && (num_binding < r_i.bound))
+            {
+                // Robot n_i;
+                // for (int r = 0; r < states_t.size(); r++)
+                // {
+                //     if (states_t[r].id == bound[k][i])
+                //         n_i = states_t[r];
+                // }
+
+                // if ((n_i.type == 2) && (r_i.type == 1))
+                // {
+                //     r_i.anchors.push_back(bound[k][i]);
+                // }
+
+                // if ((n_i.type == 1) && (n_i.anchors.size() > 0)  && (r_i.type == 1)){
+                //      for (int a = 0; a < n_i.anchors.size(); a++){
+                //          r_i.anchors.push_back(n_i.anchors[a]);
+                //      }
+                // }
+
+                r_i.binding[k].push_back(bound[k][i]);
                 num_binding++;
             }
         }
     }
+
+    // sort( r_i.anchors.begin(), r_i.anchors.end() );
+    // r_i.anchors.erase( unique( r_i.anchors.begin(), r_i.anchors.end() ), r_i.anchors.end() );
+
     if (num_binding == r_i.bound)
     {
         r_i.bounded = true;
@@ -858,27 +1015,33 @@ void Controller::update(long iterations)
     std::vector<Robot> states_t;
     states_t = this->states;
     std::vector<std::vector<Robot>> neighbors = this->getAllRobotsNeighborns(this->states);
-
-    // std::cout << "============================= " << std::endl;
-    #pragma omp parallel for
+#ifdef DEBUG_BINDING
+    std::cout << "============================= " << std::endl;
+#else
+#pragma omp parallel for
+#endif
     for (int i = 0; i < this->robots; ++i)
     {
-        // std::cout << "== Robot # " << states_t[i].id << " | " << states_t[i].type << " ==" << std::endl;
+#ifdef DEBUG_BINDING
+        std::cout << "== Robot # " << states_t[i].id << " | " << states_t[i].type << " ==" << std::endl;
+#endif
         this->updateBinding(states_t[i], neighbors[i]);
-        // for (int k = 0; k < states_t[i].binding.size(); k++)
-        // {
-        //     std::cout << "-> [" << k << "]: ";
-        //     for (int y = 0; y < states_t[i].binding[k].size(); y++)
-        //     {
-        //         std::cout << states_t[i].binding[k][y] << "  ";
-        //     }
-        //     std::cout << std::endl;
-        // }
+#ifdef DEBUG_BINDING
+        for (int k = 0; k < states_t[i].binding.size(); k++)
+        {
+            std::cout << "-> [" << k << "]: ";
+            for (int y = 0; y < states_t[i].binding[k].size(); y++)
+            {
+                std::cout << states_t[i].binding[k][y] << "  ";
+            }
+            std::cout << std::endl;
+        }
+#endif
     }
 
     // #pragma omp parallel for ordered schedule(dynamic)
 
-    #pragma omp parallel for
+#pragma omp parallel for
     for (int i = 0; i < this->robots; ++i)
     {
         this->metropolisHastings(states_t[i], neighbors[i]);
@@ -937,7 +1100,9 @@ int main(int argc, char **argv)
             porcente += 1;
         }
         iterations += 1;
-        // cvok = (cv::waitKey(1) != 27);
+#ifdef BABYSTEP
+        cvok = (cv::waitKey(0) != 27);
+#endif
     } while (ros::ok() && (iterations < max_it) && cvok);
     // if (control.gui)
     // {
