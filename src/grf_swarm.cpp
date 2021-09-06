@@ -140,8 +140,8 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         }
         else
         {
-            r.bound = 2;
-            r.orbitals.push_back(2); // Number of H
+            r.bound = 4;
+            r.orbitals.push_back(4); // Number of H
             r.orbitals.push_back(0); // Number of C
             r.orbitals.push_back(0); // Number of S
             r.mass = 0.04;           //0.4;
