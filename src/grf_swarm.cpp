@@ -130,22 +130,36 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         //     r.mass = 0.04;           //0.4;
         // }
 
-        if (r.type == 0)
+        switch ((int) r.type)
         {
+        case 0: /* H */
             r.bound = 1;
             r.orbitals.push_back(1); // Number of H
+            r.orbitals.push_back(1); // Number of N
             r.orbitals.push_back(1); // Number of C
-            r.orbitals.push_back(0); // Number of S
             r.mass = 0.03;           //0.3;
-        }
-        else
-        {
-            r.bound = 4;
-            r.orbitals.push_back(4); // Number of H
-            r.orbitals.push_back(0); // Number of C
-            r.orbitals.push_back(0); // Number of S
+            break;
+
+        case 1:
+            r.bound = 3; /* N */
+            r.orbitals.push_back(3); // Number of H
+            r.orbitals.push_back(0); // Number of N
+            r.orbitals.push_back(1); // Number of C
             r.mass = 0.04;           //0.4;
+            break;
+
+        case 2:
+            r.bound = 4; /* C */
+            r.orbitals.push_back(2); // Number of H
+            r.orbitals.push_back(1); // Number of N
+            r.orbitals.push_back(2); // Number of C
+            r.mass = 0.05;           //0.4;
+            break;
+
+        default:
+            break;
         }
+
         for (int k = 0; k < r.orbitals.size(); k++)
         {
             std::vector<unsigned int> t_;
@@ -232,29 +246,29 @@ bool Controller::draw(int step)
 
     // cv::putText(board, std::to_string(step), cv::Point(board.cols / 2, 35), cv::FONT_HERSHEY_DUPLEX,
     //             0.6, CV_RGB(0, 0, 0), 1);
-        cv::putText(board, "Steps: " + std::to_string(step), cv::Point(50, 35), cv::FONT_HERSHEY_TRIPLEX,
+    cv::putText(board, "Steps: " + std::to_string(step), cv::Point(50, 35), cv::FONT_HERSHEY_TRIPLEX,
                 0.6, CV_RGB(80, 80, 80), 1);
     // cv::putText(board, "Steps: " + std::to_string(this->metric_v), cv::Point(50, 35), cv::FONT_HERSHEY_DUPLEX,
-                // 0.6, CV_RGB(0, 0, 0), 1);
+    // 0.6, CV_RGB(0, 0, 0), 1);
 
     // float c = 300.0 / 5.0;
-    float c = (W_Y-100) / 10.0;
+    float c = (W_Y - 100) / 10.0;
 
 #ifdef SHOW_VELOCITY
     for (int i = 0; i < this->robots; i++)
     {
         Vector2 vel;
         vel = this->saturation(this->states[i].velocity, 0.3);
-        vel.x = W_X/2.0 + c * (this->states[i].position.x + vel.x);
-        vel.y = W_Y/2.0 - c * (this->states[i].position.y + vel.y);
-        cv::arrowedLine(board, cv::Point(W_X/2.0 + c * this->states[i].position.x, W_Y/2.0 - c * this->states[i].position.y), cv::Point(vel.x, vel.y), cv::Scalar(220, 220, 220), 2, 8);
+        vel.x = W_X / 2.0 + c * (this->states[i].position.x + vel.x);
+        vel.y = W_Y / 2.0 - c * (this->states[i].position.y + vel.y);
+        cv::arrowedLine(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(vel.x, vel.y), cv::Scalar(220, 220, 220), 2, 8);
     }
 #endif
 
 #ifdef SHOW_SENSING
     for (int i = 0; i < this->robots; i++)
     {
-        cv::circle(board, cv::Point(W_X/2.0 + c * this->states[i].position.x, W_Y/2.0 - c * this->states[i].position.y), c * this->sensing, cv::Scalar(240, 240, 240), 1, 8);
+        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->sensing, cv::Scalar(240, 240, 240), 1, 8);
     }
 #endif
 
@@ -263,14 +277,14 @@ bool Controller::draw(int step)
         switch ((int)this->states[i].type)
         { // BGR
         case 0:
-            color = cv::Scalar(128, 0, 0);
+            color = cv::Scalar(128, 128, 128);
             break; // maroon
         case 1:
-            color = cv::Scalar(0, 0, 128);
+            color = cv::Scalar(0, 128, 0);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
-            color = cv::Scalar(0, 0, 0);
+            color = cv::Scalar(128, 0, 0);
             break; // blue violet
         case 3:
             color = cv::Scalar(199, 21, 133);
@@ -358,17 +372,18 @@ bool Controller::draw(int step)
             break; // black
         }
         std::swap(color[0], color[2]);
-        cv::circle(board, cv::Point(W_X/2.0 + c * this->states[i].position.x, W_Y/2.0 - c * this->states[i].position.y), c * 0.14, color, -1, 8);
+        // cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * 0.14, color, -1, 8);
+        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].mass * 3, color, -1, 8);
         // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
         for (int k = 0; k < this->states[i].binding.size(); k++)
         {
             for (int w = 0; w < this->states[i].binding[k].size(); w++)
             {
-                cv::line(board, cv::Point(W_X/2.0 + c * this->states[i].position.x, W_Y/2.0 - c * this->states[i].position.y), cv::Point(W_X/2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y/2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
+                cv::line(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(W_X / 2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y / 2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
             }
         }
 #ifdef SHOW_ID
-        cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X/2.0 + c * this->states[i].position.x + 4, W_Y/2.0 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
+        cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X / 2.0 + c * this->states[i].position.x + 4, W_Y / 2.0 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
                     0.4, CV_RGB(0, 0, 0), 1);
 #endif
     }
@@ -376,7 +391,7 @@ bool Controller::draw(int step)
 #ifdef SHOW_OBSTACLES
     for (int i = 0; i < this->obstacles.size(); i++)
     {
-        cv::circle(board, cv::Point(W_X/2.0 + c * this->obstacles[i].x, W_Y/2.0 - c * this->obstacles[i].y), c * 0.05, cv::Scalar(0, 0, 255), -1, 8);
+        cv::circle(board, cv::Point(W_X / 2.0 + c * this->obstacles[i].x, W_Y / 2.0 - c * this->obstacles[i].y), c * 0.05, cv::Scalar(0, 0, 255), -1, 8);
     }
     this->obstacles.clear();
 #endif
@@ -456,14 +471,16 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         double I = 2.0 * (int)(r_i.type == states_t[i].type) - 1.0;
 
         I = -0.001;
-        I = 0.2;
+        // I = 0.2;
         dist = dist * 0.90;
 
-        if (states_t[i].type == r_i.type){
+        if (states_t[i].type == r_i.type)
+        {
             if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
-            if (r_i.binding[1][0] == states_t[i].binding[1][0]){
-                  I = 0.8;
-            }
+                if (r_i.binding[1][0] == states_t[i].binding[1][0])
+                {
+                    I = 0.8;
+                }
         }
 
         /* For each orbit (k) in the robot (r_i). */
@@ -492,7 +509,6 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
                 }
             }
         }
-
 
         if ((I > 0) && (dist > this->sensing))
         {
