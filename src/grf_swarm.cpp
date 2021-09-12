@@ -96,14 +96,31 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             r.bound = 1;
             r.orbitals.push_back(1); // Number of H
             r.orbitals.push_back(1); // Number of N
+            r.orbitals.push_back(1); // Number of C
             r.mass = 0.1;            // Mass H
             r.radius = 53;           // Radius of H
             break;
 
         case 1:
+            r.bound = 3;             /* N */
+            r.orbitals.push_back(3); // Number of H
+            r.orbitals.push_back(0); // Number of N
+            r.orbitals.push_back(1); // Number of C
+            r.mass = 1.4;            // Mass O
+            r.radius = 65;           // Radius of O
+
+            // r.bound = 2;             /* O */
+            // r.orbitals.push_back(2); // Number of H
+            // r.orbitals.push_back(0); // Number of N
+            // r.mass = 1.6;            // Mass O
+            // r.radius = 60;           // Radius of O
+            break;
+
+        case 2:
             r.bound = 4;             /* C */
-            r.orbitals.push_back(4); // Number of H
-            r.orbitals.push_back(0); // Number of C
+            r.orbitals.push_back(2); // Number of H
+            r.orbitals.push_back(1); // Number of N
+            r.orbitals.push_back(2); // Number of C
             r.mass = 1.2;            // Mass O
             r.radius = 70;           // Radius of O
             // r.bound = 2;             /* O */
@@ -192,7 +209,7 @@ bool Controller::draw(int step)
             color = cv::Scalar(128, 128, 128);
             break; // maroon
         case 1:
-            color = cv::Scalar(128, 0, 0);
+            color = cv::Scalar(0, 128, 0);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
@@ -285,11 +302,11 @@ bool Controller::draw(int step)
         }
         std::swap(color[0], color[2]);
         // cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * 0.14, color, -1, 8);
-        if (this->states[i].type == 2)
-        {
-            // cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * 0.01 * 3, color, -1, 8);
-            continue;
-        }
+        // if (this->states[i].type == 2)
+        // {
+        // cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * 0.01 * 3, color, -1, 8);
+        // continue;
+        // }
 
         cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].radius * 0.0021, color, -1, 8);
         // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
@@ -388,18 +405,18 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         // Indicator function f: 1 -> same type, f: -1 -> otherwise
         double I = 2.0 * (int)(r_i.type == states_t[i].type) - 1.0;
 
-        I = -0.001;
-        I = 0.2;
-        dist = dist * 0.94;
+        I = -0.002;
+        // I = 0.2;
+        dist = dist * 0.80;
 
-        if (states_t[i].type == r_i.type)
-        {
-            if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
-                if (r_i.binding[1][0] == states_t[i].binding[1][0])
-                {
-                    I = 0.8;
-                }
-        }
+        // if (states_t[i].type == r_i.type)
+        // {
+        //     if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
+        //         if (r_i.binding[1][0] == states_t[i].binding[1][0])
+        //         {
+        //             I = 0.8;
+        //         }
+        // }
 
         /* For each orbit (k) in the robot (r_i). */
         for (int k = 0; k < r_i.binding.size(); k++)
@@ -428,10 +445,10 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
             }
         }
 
-        if (r_i.type == 1 && states_t[i].type == 2)
-        {
-            dist = dist * 1.90;
-        }
+        // if (r_i.type == 1 && states_t[i].type == 2)
+        // {
+        //     dist = dist * 1.90;
+        // }
 
         if ((I > 0) && (dist > this->sensing))
         {
@@ -856,7 +873,7 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
         //     }
         // }
 
-        if (((areweconnected || isthereanyroom) && !cycledetected))
+        if ((areweconnected || isthereanyroom) && !cycledetected)
         {
             /* Is orbital (2) filled? */
             // bool isorbitalfilled = (n_j.binding[2].size() > 0);
@@ -905,7 +922,7 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
     //Update binding list
     unsigned int num_binding = 0;
     /* For each orbital (k) in robot (r_i). */
-    r_i.anchors.clear();
+    // r_i.anchors.clear();
     for (int k = (r_i.binding.size() - 1); k >= 0; k--)
     {
         /* Clear history of orbital */
