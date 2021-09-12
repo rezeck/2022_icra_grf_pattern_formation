@@ -55,6 +55,7 @@ public:
     bool bounded;
     std::vector<unsigned int> anchors;
     double mass;
+    double radius;
     std::vector<std::vector<unsigned int>> binding;
     std::vector<unsigned int> orbitals;
 };

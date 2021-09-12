@@ -97,31 +97,33 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             r.bound = 1;
             r.orbitals.push_back(1); // Number of H
             r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(1); // Number of C
-            r.mass = 0.05;           //0.3;
+            // r.orbitals.push_back(1); // Number of C
+            r.mass = 0.1;   // Mass H
+            r.radius = 53; // Radius of H
             break;
 
         case 1:
-            r.bound = 5;             /* O */
-            r.orbitals.push_back(4); // Number of H
+            r.bound = 2;             /* O */
+            r.orbitals.push_back(2); // Number of H
             r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(1); // Number of C
-            r.mass = 0.07;           //0.4;
+            // r.orbitals.push_back(1); // Number of C
+            r.mass = 1.6;    // Mass O
+            r.radius = 60; // Radius of O
             break;
 
-        case 2:
-            r.bound = 1;             /* C */
-            r.orbitals.push_back(0); // Number of H
-            r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(0); // Number of C
-            r.mass = 0.5;            //0.4;
-            r.position.x = (6.0 * count / (NUM-1) - 6.0 / 2.0);
-            r.position.y = fabs(14.0 * count / (NUM-1) - 14.0 / 2.0) - 3;
-            r.anchor = true;
-            r.velocity.x = 0;
-            r.velocity.y = 0;
-            count++;
-            break;
+        // case 2:
+        //     r.bound = 1;             /* C */
+        //     r.orbitals.push_back(0); // Number of H
+        //     r.orbitals.push_back(1); // Number of N
+        //     r.orbitals.push_back(0); // Number of C
+        //     r.mass = 0.5;            //0.4;
+        //     r.position.x = (6.0 * count / (NUM-1) - 6.0 / 2.0);
+        //     r.position.y = fabs(14.0 * count / (NUM-1) - 14.0 / 2.0) - 3;
+        //     r.anchor = true;
+        //     r.velocity.x = 0;
+        //     r.velocity.y = 0;
+        //     count++;
+        //     break;
 
             // default:
             //     break;
@@ -189,7 +191,7 @@ bool Controller::draw(int step)
             color = cv::Scalar(128, 128, 128);
             break; // maroon
         case 1:
-            color = cv::Scalar(128, 0, 0);
+            color = cv::Scalar(0, 0, 128);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
@@ -288,7 +290,7 @@ bool Controller::draw(int step)
             continue;
         }
 
-        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].mass * 2.2, color, -1, 8);
+        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].radius * 0.0021, color, -1, 8);
         // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
         // for (int k = 0; k < this->states[i].binding.size(); k++)
         // {
@@ -386,17 +388,17 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         double I = 2.0 * (int)(r_i.type == states_t[i].type) - 1.0;
 
         I = -0.001;
-        // I = 0.2;
+        I = 0.2;
         dist = dist * 0.90;
 
-        // if (states_t[i].type == r_i.type)
-        // {
-        //     if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
-        //         if (r_i.binding[1][0] == states_t[i].binding[1][0])
-        //         {
-        //             I = 0.8;
-        //         }
-        // }
+        if (states_t[i].type == r_i.type)
+        {
+            if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
+                if (r_i.binding[1][0] == states_t[i].binding[1][0])
+                {
+                    I = 0.8;
+                }
+        }
 
         /* For each orbit (k) in the robot (r_i). */
         for (int k = 0; k < r_i.binding.size(); k++)

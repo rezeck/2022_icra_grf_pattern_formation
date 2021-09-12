@@ -1,6 +1,8 @@
 <launch>
-		<arg name="robots" default="108"/>
-		<arg name="groups" default="72:18:18" />
+		<!-- <arg name="robots" default="108"/>
+		<arg name="groups" default="72:18:18" /> -->
+		<arg name="robots" default="180"/>
+		<arg name="groups" default="120:60" />
 		<!-- <arg name="groups" default="80:20" /> -->
 		<arg name="world" default="5"/>
 		<arg name="sensing" default="0.8"/>
