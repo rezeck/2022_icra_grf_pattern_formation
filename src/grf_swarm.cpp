@@ -1,6 +1,5 @@
 #include "grf_swarm.h"
 
-
 Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
 { // constructor
     /* Get params */
@@ -97,33 +96,36 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             r.bound = 1;
             r.orbitals.push_back(1); // Number of H
             r.orbitals.push_back(1); // Number of N
-            // r.orbitals.push_back(1); // Number of C
-            r.mass = 0.1;   // Mass H
-            r.radius = 53; // Radius of H
+            r.mass = 0.1;            // Mass H
+            r.radius = 53;           // Radius of H
             break;
 
         case 1:
-            r.bound = 2;             /* O */
-            r.orbitals.push_back(2); // Number of H
-            r.orbitals.push_back(0); // Number of N
-            // r.orbitals.push_back(1); // Number of C
-            r.mass = 1.6;    // Mass O
-            r.radius = 60; // Radius of O
+            r.bound = 4;             /* C */
+            r.orbitals.push_back(4); // Number of H
+            r.orbitals.push_back(0); // Number of C
+            r.mass = 1.2;            // Mass O
+            r.radius = 70;           // Radius of O
+            // r.bound = 2;             /* O */
+            // r.orbitals.push_back(2); // Number of H
+            // r.orbitals.push_back(0); // Number of N
+            // r.mass = 1.6;            // Mass O
+            // r.radius = 60;           // Radius of O
             break;
 
-        // case 2:
-        //     r.bound = 1;             /* C */
-        //     r.orbitals.push_back(0); // Number of H
-        //     r.orbitals.push_back(1); // Number of N
-        //     r.orbitals.push_back(0); // Number of C
-        //     r.mass = 0.5;            //0.4;
-        //     r.position.x = (6.0 * count / (NUM-1) - 6.0 / 2.0);
-        //     r.position.y = fabs(14.0 * count / (NUM-1) - 14.0 / 2.0) - 3;
-        //     r.anchor = true;
-        //     r.velocity.x = 0;
-        //     r.velocity.y = 0;
-        //     count++;
-        //     break;
+            // case 2:
+            //     r.bound = 1;             /* C */
+            //     r.orbitals.push_back(0); // Number of H
+            //     r.orbitals.push_back(1); // Number of N
+            //     r.orbitals.push_back(0); // Number of C
+            //     r.mass = 0.5;            //0.4;
+            //     r.position.x = (6.0 * count / (NUM-1) - 6.0 / 2.0);
+            //     r.position.y = fabs(14.0 * count / (NUM-1) - 14.0 / 2.0) - 3;
+            //     r.anchor = true;
+            //     r.velocity.x = 0;
+            //     r.velocity.y = 0;
+            //     count++;
+            //     break;
 
             // default:
             //     break;
@@ -137,7 +139,6 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         this->states.push_back(r);
     }
 
-   
     if (this->gui)
     {
         cv::namedWindow("GRF-Pattern-Formation", cv::WINDOW_AUTOSIZE);
@@ -191,7 +192,7 @@ bool Controller::draw(int step)
             color = cv::Scalar(128, 128, 128);
             break; // maroon
         case 1:
-            color = cv::Scalar(0, 0, 128);
+            color = cv::Scalar(128, 0, 0);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
@@ -389,7 +390,7 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
 
         I = -0.001;
         I = 0.2;
-        dist = dist * 0.90;
+        dist = dist * 0.94;
 
         if (states_t[i].type == r_i.type)
         {
@@ -826,12 +827,12 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
             for (int y = 0; y < n_j.binding[k].size(); y++)
             {
                 /* For each orbital (m) in the robot (r_i) */
-                for (int m = (r_i.binding.size() - 1); m >= 0; m--)
+                for (int m = (bound.size() - 1); m >= 0; m--)
                 {
                     /* For each robot (x) in the orbital (m) */
-                    for (int w = 0; w < r_i.binding[m].size(); w++)
+                    for (int w = 0; w < bound[m].size(); w++)
                     {
-                        if (n_j.binding[k][y] == r_i.binding[m][w])
+                        if (n_j.binding[k][y] == bound[m][w])
                         {
                             cycledetected = true;
                         }
