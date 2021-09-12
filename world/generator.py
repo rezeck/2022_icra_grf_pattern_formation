@@ -31,8 +31,8 @@ if not ":" in args.groups:
 			end = ''
 		print("{} {} {} {} {}".format(q[i,0], q[i,1], g[i,0], g[i,1], math.floor(i/r)), end = end)
 else:
-	props = args.groups.split(":")
-	props = [math.ceil(args.robots*float(i)/100.0) for i in props]
+	props = [int(i) for i in args.groups.split(":")]
+	# props = [math.ceil(args.robots*float(i)/100.0) for i in props]
 	types = [0]*args.robots
 	count = 0
 	for i in range(len(props)):

@@ -59,15 +59,6 @@ public:
     std::vector<unsigned int> orbitals;
 };
 
-
-class ClusterMetric
-{
-public:
-    ClusterMetric(double robots, double groups, double threshold);
-    double robots, groups, threshold;
-    int compute(std::vector<Robot> states);
-};
-
 class cmp {
     Robot r;
 public:

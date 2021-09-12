@@ -149,8 +149,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/grf_swarm.cpp)
-add_executable(${PROJECT_NAME}_real src/grf_swarm_ros.cpp)
-add_executable(${PROJECT_NAME}_nav src/grf_swarm_nav.cpp)
+add_executable(${PROJECT_NAME}_gazebo src/grf_ros_gazebo.cpp)
+# add_executable(${PROJECT_NAME}_nav src/grf_swarm_nav.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -172,13 +172,13 @@ target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}  ${OpenCV_LIBS} ${OpenMP_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME}_real
+target_link_libraries(${PROJECT_NAME}_gazebo
   ${catkin_LIBRARIES}  ${OpenCV_LIBS} ${OpenMP_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME}_nav
-  ${catkin_LIBRARIES}  ${OpenCV_LIBS} ${OpenMP_INCLUDE_DIRS}
-)
+# target_link_libraries(${PROJECT_NAME}_nav
+#   ${catkin_LIBRARIES}  ${OpenCV_LIBS} ${OpenMP_INCLUDE_DIRS}
+# )
 
 #############
 ## Install ##

@@ -1,47 +1,5 @@
 #include "grf_swarm.h"
 
-ClusterMetric::ClusterMetric(double robots_, double groups_, double threshold_) : robots(robots_), groups(groups_), threshold(threshold_) {}
-
-int ClusterMetric::compute(std::vector<Robot> states)
-{
-    std::vector<std::vector<Robot>> clusters;
-
-    while (states.size())
-    {
-        std::vector<Robot> cluster;
-        cluster.push_back(states[0]);
-        states.erase(states.begin());
-        bool founded = true;
-        while (founded)
-        {
-            founded = false;
-            for (int i = 0; i < cluster.size(); i++)
-            {
-                for (int j = 0; j < states.size(); j++)
-                {
-                    if (cluster[i].type != states[j].type)
-                    {
-                        continue;
-                    }
-                    double dx = cluster[i].position.x - states[j].position.x;
-                    double dy = cluster[i].position.y - states[j].position.y;
-                    double dist = sqrt(dx * dx + dy * dy);
-                    if (dist > this->threshold)
-                    {
-                        continue;
-                    }
-                    cluster.push_back(states[j]);
-                    states.erase(states.begin() + j);
-                    founded = true;
-                    break;
-                }
-            }
-        }
-        clusters.push_back(cluster);
-    }
-
-    return (int)clusters.size();
-}
 
 Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
 { // constructor
@@ -90,6 +48,9 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         ROS_INFO("\33[92mLog: %s\33[0m", logginfile.c_str());
     }
     std::istringstream ss(this->swarmconf);
+
+    int NUM = 18;
+    int count = 0;
     for (int i = 0; i < this->robots; ++i)
     {
         Robot r;
@@ -130,34 +91,40 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         //     r.mass = 0.04;           //0.4;
         // }
 
-        switch ((int) r.type)
+        switch ((int)r.type)
         {
         case 0: /* H */
             r.bound = 1;
             r.orbitals.push_back(1); // Number of H
             r.orbitals.push_back(1); // Number of N
             r.orbitals.push_back(1); // Number of C
-            r.mass = 0.03;           //0.3;
+            r.mass = 0.05;           //0.3;
             break;
 
         case 1:
-            r.bound = 3; /* N */
-            r.orbitals.push_back(3); // Number of H
+            r.bound = 5;             /* O */
+            r.orbitals.push_back(4); // Number of H
             r.orbitals.push_back(0); // Number of N
             r.orbitals.push_back(1); // Number of C
-            r.mass = 0.04;           //0.4;
+            r.mass = 0.07;           //0.4;
             break;
 
         case 2:
-            r.bound = 4; /* C */
-            r.orbitals.push_back(2); // Number of H
+            r.bound = 1;             /* C */
+            r.orbitals.push_back(0); // Number of H
             r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(2); // Number of C
-            r.mass = 0.05;           //0.4;
+            r.orbitals.push_back(0); // Number of C
+            r.mass = 0.5;            //0.4;
+            r.position.x = (6.0 * count / (NUM-1) - 6.0 / 2.0);
+            r.position.y = fabs(14.0 * count / (NUM-1) - 14.0 / 2.0) - 3;
+            r.anchor = true;
+            r.velocity.x = 0;
+            r.velocity.y = 0;
+            count++;
             break;
 
-        default:
-            break;
+            // default:
+            //     break;
         }
 
         for (int k = 0; k < r.orbitals.size(); k++)
@@ -167,66 +134,8 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         }
         this->states.push_back(r);
     }
-    // this->states[0].anchor = true;
-    // this->states[0].position.x = -1.5;
-    // this->states[0].position.y = -1.5;
-    // this->states[0].velocity.x = 0;
-    // this->states[0].velocity.y = 0;
-    // this->states[0].mass = 0.5;
-    // this->states[0].type = 2;
-    // this->states[0].bound = 2;
-    // this->states[0].orbitals[0] = 0;
-    // this->states[0].orbitals[1] = 2;
-    // this->states[0].orbitals[2] = 0;
 
-    // this->states[1].anchor = true;
-    // this->states[1].position.x = -1.5;
-    // this->states[1].position.y = 1.5;
-    // this->states[1].velocity.x = 0;
-    // this->states[1].velocity.y = 0;
-    // this->states[1].mass = 0.5;
-    // this->states[1].type = 2;
-    // this->states[1].bound = 2;
-    // this->states[1].orbitals[0] = 0;
-    // this->states[1].orbitals[1] = 2;
-    // this->states[1].orbitals[2] = 0;
-
-    // this->states[2].anchor = true;
-    // this->states[2].position.x = 1.5;
-    // this->states[2].position.y = -1.5;
-    // this->states[2].velocity.x = 0;
-    // this->states[2].velocity.y = 0;
-    // this->states[2].mass = 0.5;
-    // this->states[2].type = 2;
-    // this->states[2].bound = 2;
-    // this->states[2].orbitals[0] = 0;
-    // this->states[2].orbitals[1] = 2;
-    // this->states[2].orbitals[2] = 0;
-
-    // this->states[3].anchor = true;
-    // this->states[3].position.x = 1.5;
-    // this->states[3].position.y = 1.5;
-    // this->states[3].velocity.x = 0;
-    // this->states[3].velocity.y = 0;
-    // this->states[3].mass = 0.5;
-    // this->states[3].type = 2;
-    // this->states[3].bound = 2;
-    // this->states[3].orbitals[0] = 0;
-    // this->states[3].orbitals[1] = 2;
-    // this->states[3].orbitals[2] = 0;
-
-    // this->states[4].anchor = true;
-    // this->states[4].position.x = 0;
-    // this->states[4].position.y = 2;
-    // this->states[4].velocity.x = 0;
-    // this->states[4].velocity.y = 0;
-    // this->states[4].mass = 0.5;
-    // this->states[4].type = 2;
-    // this->states[4].bound = 1;
-    // this->states[4].orbitals[0] = 0;
-    // this->states[4].orbitals[1] = 1;
-    // this->states[4].orbitals[2] = 0;
-
+   
     if (this->gui)
     {
         cv::namedWindow("GRF-Pattern-Formation", cv::WINDOW_AUTOSIZE);
@@ -280,7 +189,7 @@ bool Controller::draw(int step)
             color = cv::Scalar(128, 128, 128);
             break; // maroon
         case 1:
-            color = cv::Scalar(0, 128, 0);
+            color = cv::Scalar(128, 0, 0);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
@@ -373,15 +282,21 @@ bool Controller::draw(int step)
         }
         std::swap(color[0], color[2]);
         // cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * 0.14, color, -1, 8);
-        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].mass * 3, color, -1, 8);
-        // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
-        for (int k = 0; k < this->states[i].binding.size(); k++)
+        if (this->states[i].type == 2)
         {
-            for (int w = 0; w < this->states[i].binding[k].size(); w++)
-            {
-                cv::line(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(W_X / 2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y / 2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
-            }
+            // cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * 0.01 * 3, color, -1, 8);
+            continue;
         }
+
+        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].mass * 2.2, color, -1, 8);
+        // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
+        // for (int k = 0; k < this->states[i].binding.size(); k++)
+        // {
+        //     for (int w = 0; w < this->states[i].binding[k].size(); w++)
+        //     {
+        //         cv::line(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(W_X / 2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y / 2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
+        //     }
+        // }
 #ifdef SHOW_ID
         cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X / 2.0 + c * this->states[i].position.x + 4, W_Y / 2.0 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
                     0.4, CV_RGB(0, 0, 0), 1);
@@ -474,14 +389,14 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         // I = 0.2;
         dist = dist * 0.90;
 
-        if (states_t[i].type == r_i.type)
-        {
-            if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
-                if (r_i.binding[1][0] == states_t[i].binding[1][0])
-                {
-                    I = 0.8;
-                }
-        }
+        // if (states_t[i].type == r_i.type)
+        // {
+        //     if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
+        //         if (r_i.binding[1][0] == states_t[i].binding[1][0])
+        //         {
+        //             I = 0.8;
+        //         }
+        // }
 
         /* For each orbit (k) in the robot (r_i). */
         for (int k = 0; k < r_i.binding.size(); k++)
@@ -493,7 +408,7 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
                 {
                     if (states_t[i].anchor)
                     {
-                        I = 8;
+                        I = 16;
                         // dist = dist * 1.5;
                     }
                     else if (states_t[i].bounded == r_i.bounded)
@@ -508,6 +423,11 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
                     }
                 }
             }
+        }
+
+        if (r_i.type == 1 && states_t[i].type == 2)
+        {
+            dist = dist * 1.90;
         }
 
         if ((I > 0) && (dist > this->sensing))
@@ -575,14 +495,6 @@ bool Controller::getIntersection(double r, Vector2 circle, Vector2 p1, Vector2 p
     }
     return false;
 }
-
-// bool Controller::cmp(Robot& a, Robot& b, Robot& c){
-//     return true;//dist1 < dist2;
-// }
-
-// bool cmp(double& dist1, double& dist2){
-//     return dist1 < dist2;
-// }
 
 std::vector<std::vector<Robot>> Controller::getAllRobotsNeighborns(std::vector<Robot> agents)
 {
@@ -817,16 +729,6 @@ Vector2 Controller::metropolisHastings(Robot r_i, std::vector<Robot> states_t)
         r_i.velocity = new_velocity;
         r_i.position.x += new_velocity.x * this->dt;
         r_i.position.y += new_velocity.y * this->dt;
-        // for (int k = 0; k < r_i.binding.size(); k++)
-        // {
-        //     for (int w = 0; w < r_i.binding[k].size(); w++)
-        //     {
-        //         unsigned int _id = r_i.binding[k][w];
-        //         double d_anchor = this->euclidean(r_i.position, this->states[_id].position);
-        //         if (d_anchor < 0.2 &&  this->states[_id].anchor)
-        //             r_i.anchor = true;
-        //     }
-        // }
     }
     this->states[(int)r_i.id] = r_i;
 
@@ -1019,7 +921,7 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
         /* For each robot (k) to be add to robot (r_i) orbital (i). */
         for (int i = 0; i < bound[k].size(); i++)
         {
-            if (i < r_i.orbitals[k] && (num_binding < r_i.bound))
+            if ((i < r_i.orbitals[k]) && (num_binding < r_i.bound))
             {
                 // Robot n_i;
                 // for (int r = 0; r < states_t.size(); r++)
@@ -1093,14 +995,6 @@ void Controller::update(long iterations)
     for (int i = 0; i < this->robots; ++i)
     {
         this->metropolisHastings(states_t[i], neighbors[i]);
-    }
-
-    ClusterMetric metric(this->robots, this->groups, 0.4);
-    this->metric_v = metric.compute(this->states);
-
-    if (this->logging)
-    {
-        this->logfile << this->metric_v << "\n";
     }
 }
 
