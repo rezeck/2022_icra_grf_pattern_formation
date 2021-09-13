@@ -93,42 +93,55 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         switch ((int)r.type)
         {
         case 0: /* H */
-            r.bound = 1;
-            r.orbitals.push_back(1); // Number of H
-            r.orbitals.push_back(1); // Number of N
+            // r.bound = 1;
+            // r.orbitals.push_back(1); // Number of H
+            // r.orbitals.push_back(1); // Number of N
+            // r.orbitals.push_back(1); // Number of C
+            // r.mass = 0.1;            // Mass H
+            // r.radius = 53;           // Radius of H
+
+            r.bound = 2;             /* O */
+            r.orbitals.push_back(2); // Number of O
             r.orbitals.push_back(1); // Number of C
-            r.mass = 0.1;            // Mass H
-            r.radius = 53;           // Radius of H
+            r.mass = 1.6;            // Mass O
+            r.radius = 60;           // Radius of O
             break;
 
         case 1:
-            r.bound = 3;             /* N */
-            r.orbitals.push_back(3); // Number of H
-            r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(1); // Number of C
-            r.mass = 1.4;            // Mass O
-            r.radius = 65;           // Radius of O
+            // r.bound = 3;             /* N */
+            // r.orbitals.push_back(3); // Number of H
+            // r.orbitals.push_back(0); // Number of N
+            // r.orbitals.push_back(1); // Number of C
+            // r.mass = 1.4;            // Mass O
+            // r.radius = 65;           // Radius of O
 
             // r.bound = 2;             /* O */
             // r.orbitals.push_back(2); // Number of H
             // r.orbitals.push_back(0); // Number of N
             // r.mass = 1.6;            // Mass O
             // r.radius = 60;           // Radius of O
-            break;
 
-        case 2:
             r.bound = 4;             /* C */
             r.orbitals.push_back(2); // Number of H
-            r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(2); // Number of C
+            r.orbitals.push_back(0); // Number of N
+            // r.orbitals.push_back(2); // Number of C
             r.mass = 1.2;            // Mass O
             r.radius = 70;           // Radius of O
-            // r.bound = 2;             /* O */
-            // r.orbitals.push_back(2); // Number of H
-            // r.orbitals.push_back(0); // Number of N
-            // r.mass = 1.6;            // Mass O
-            // r.radius = 60;           // Radius of O
             break;
+
+            // case 2:
+            //     r.bound = 4;             /* C */
+            //     r.orbitals.push_back(2); // Number of H
+            //     r.orbitals.push_back(1); // Number of N
+            //     r.orbitals.push_back(2); // Number of C
+            //     r.mass = 1.2;            // Mass O
+            //     r.radius = 70;           // Radius of O
+            //     // r.bound = 2;             /* O */
+            //     // r.orbitals.push_back(2); // Number of H
+            //     // r.orbitals.push_back(0); // Number of N
+            //     // r.mass = 1.6;            // Mass O
+            //     // r.radius = 60;           // Radius of O
+            //     break;
 
             // case 2:
             //     r.bound = 1;             /* C */
@@ -206,10 +219,10 @@ bool Controller::draw(int step)
         switch ((int)this->states[i].type)
         { // BGR
         case 0:
-            color = cv::Scalar(128, 128, 128);
+            color = cv::Scalar(0, 0, 128);
             break; // maroon
         case 1:
-            color = cv::Scalar(0, 128, 0);
+            color = cv::Scalar(128, 0, 0);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
