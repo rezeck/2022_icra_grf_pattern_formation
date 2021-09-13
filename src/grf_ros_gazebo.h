@@ -20,6 +20,7 @@
 #include <boost/thread.hpp>
 #include <boost/asio.hpp>
 #include <geometry_msgs/Pose2D.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Float32.h>

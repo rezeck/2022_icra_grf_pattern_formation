@@ -13,6 +13,7 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
     ros::param::get("/mass", this->mass);
     this->vmax = 0.30;
     ros::param::get("/vmax", this->vmax);
+    this->vmax = 0.15;
     this->dt = 0.01;
     ros::param::get("/dt", this->dt);
     this->worldsize = 3.80;
@@ -28,11 +29,13 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         /* Topics name */
         std::string robot_name = "/hero_" + boost::lexical_cast<std::string>(i);
         ROS_INFO("Starting robot: %s", robot_name.c_str());
-        std::string cmd_topic = robot_name + "/cmd_vel";
+        // std::string cmd_topic = robot_name + "/cmd_vel";
+        std::string cmd_topic = robot_name + "/goal";
         std::string pose_topic = robot_name + "/odom";
         std::string color_topic = robot_name + "/hat_color";
         /* Topics */
-        this->r_cmdvel_.push_back(nh_.advertise<geometry_msgs::Twist>(cmd_topic.c_str(), 1));
+        // this->r_cmdvel_.push_back(nh_.advertise<geometry_msgs::Twist>(cmd_topic.c_str(), 1));
+        this->r_cmdvel_.push_back(nh_.advertise<geometry_msgs::PoseStamped>(cmd_topic.c_str(), 1));
         this->r_pose_.push_back(nh_.subscribe<nav_msgs::Odometry>(pose_topic.c_str(), 1, boost::bind(&Controller::r_pose_cb, this, _1, pose_topic, i)));
         this->r_cmdcolor_.push_back(nh_.advertise<std_msgs::ColorRGBA>(color_topic.c_str(), 1));
         /* Get robot type */
@@ -53,35 +56,35 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         r.id = (double)i;
         switch ((int)r.type)
         {
-        case 0: /* H */
+        case 0: /* O */
             r.bound = 1;
-            r.orbitals.push_back(0); // Number of H
-            r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(0); // Number of C
-            r.mass = 10*3.03;           //0.3;
+            r.orbitals.push_back(1); // Number of O
+            r.orbitals.push_back(1); // Number of C
+            // r.orbitals.push_back(1); // Number of X
+            r.mass = 6.0 * 16;       //0.3;
             break;
 
         case 1:
             r.bound = 4;             /* O */
-            r.orbitals.push_back(4); // Number of H
-            r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(0); // Number of C
-            r.mass = 10*5.04;           //0.4;
+            r.orbitals.push_back(0); // Number of O
+            r.orbitals.push_back(4); // Number of C
+            // r.orbitals.push_back(1); // Number of X
+            r.mass = 6.0 * 12;       //0.4;
             break;
 
-        case 2:
-            r.bound = 1;             /* C */
-            r.orbitals.push_back(0); // Number of H
-            r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(0); // Number of C
-            r.mass = 0.5;            //0.4;
-            // r.position.x = (6.0 * count / (NUM - 1) - 6.0 / 2.0);
-            // r.position.y = fabs(14.0 * count / (NUM - 1) - 14.0 / 2.0) - 3;
-            r.anchor = true;
-            r.velocity.x = 0;
-            r.velocity.y = 0;
-            // count++;
-            break;
+            // case 2:
+            //     r.bound = 1;             /* C */
+            //     r.orbitals.push_back(0); // Number of H
+            //     r.orbitals.push_back(1); // Number of N
+            //     r.orbitals.push_back(0); // Number of C
+            //     r.mass = 0.5;            //0.4;
+            //     // r.position.x = (6.0 * count / (NUM - 1) - 6.0 / 2.0);
+            //     // r.position.y = fabs(14.0 * count / (NUM - 1) - 14.0 / 2.0) - 3;
+            //     r.anchor = true;
+            //     r.velocity.x = 0;
+            //     r.velocity.y = 0;
+            //     // count++;
+            //     break;
 
             // default:
             //     break;
@@ -96,6 +99,28 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         /* Set robot color by type */
         this->setRobotColor(r, (int)r.type);
     }
+
+    // this->states[0].type = 2;
+    // this->states[0].mass = 200;
+    // this->states[0].anchor = true;
+    // this->states[0].bound = 1;
+    // this->states[0].orbitals.clear();
+    // this->states[0].orbitals.push_back(1); // Number of O
+    // this->states[0].orbitals.push_back(1); // Number of C
+    // this->states[0].orbitals.push_back(0); // Number of X
+    // this->states[0].velocity.x = 0;
+    // this->states[0].velocity.y = 0;
+
+    // this->states[1].type = 2;
+    // this->states[1].mass = 400;
+    // this->states[1].anchor = true;
+    // this->states[1].bound = 1;
+    // this->states[1].orbitals.clear();
+    // this->states[1].orbitals.push_back(1); // Number of O
+    // this->states[1].orbitals.push_back(1); // Number of C
+    // this->states[1].orbitals.push_back(0); // Number of X
+    // this->states[1].velocity.x = 0;
+    // this->states[1].velocity.y = 0;
 
     // Obstacle body local state
     Body obstacle_;
@@ -360,7 +385,7 @@ double Controller::fof_Us(Robot r_i, Vector2 v)
     {
         // lets compute the distance to the obstacle (we only use the distance)
         double dist = this->euclidean(r_i.position, obstacles[i]);
-        if (dist <= 0.9 * this->safezone)
+        if (dist <= 2.0 * this->safezone)
         {
             Us += this->coulombBuckinghamPotential(dist * 0.5, 0.04, 0.04, 0.8, 1.0, 16.0, 1.0);
         }
@@ -393,9 +418,9 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         // Indicator function f: 1 -> same type, f: -1 -> otherwise
         double I = 2.0 * (int)(r_i.type == states_t[i].type) - 1.0;
 
-        I = -0.001;
+        I = -0.010;
         // I = 0.2;
-        dist = dist * 1.10;
+        dist = dist * 1.14;
 
         // if (states_t[i].type == r_i.type)
         // {
@@ -417,26 +442,23 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
                     if (states_t[i].anchor)
                     {
                         I = 8;
-                        // dist = dist * 1.5;
                     }
                     else if (states_t[i].bounded == r_i.bounded)
                     {
                         I = 4;
-                        // dist = dist * 1.4;
                     }
                     else
                     {
                         I = 3;
-                        // dist = dist * 1.3;
                     }
                 }
             }
         }
 
-        if (r_i.type == 1 && states_t[i].type == 2)
-        {
-            dist = dist * 1.90;
-        }
+        // if (r_i.type == 1 && states_t[i].type == 2)
+        // {
+        //     dist = dist * 1.90;
+        // }
 
         if ((I > 0) && (dist > this->sensing))
         {
@@ -956,12 +978,12 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
             for (int y = 0; y < n_j.binding[k].size(); y++)
             {
                 /* For each orbital (m) in the robot (r_i) */
-                for (int m = (r_i.binding.size() - 1); m >= 0; m--)
+                for (int m = (bound.size() - 1); m >= 0; m--)
                 {
                     /* For each robot (x) in the orbital (m) */
-                    for (int w = 0; w < r_i.binding[m].size(); w++)
+                    for (int w = 0; w < bound[m].size(); w++)
                     {
-                        if (n_j.binding[k][y] == r_i.binding[m][w])
+                        if (n_j.binding[k][y] == bound[m][w])
                         {
                             cycledetected = true;
                         }
@@ -1034,7 +1056,7 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
     //Update binding list
     unsigned int num_binding = 0;
     /* For each orbital (k) in robot (r_i). */
-    r_i.anchors.clear();
+    // r_i.anchors.clear();
     for (int k = (r_i.binding.size() - 1); k >= 0; k--)
     {
         /* Clear history of orbital */
@@ -1081,15 +1103,7 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
 
     // sort( r_i.anchors.begin(), r_i.anchors.end() );
     // r_i.anchors.erase( unique( r_i.anchors.begin(), r_i.anchors.end() ), r_i.anchors.end() );
-
-    if (num_binding == r_i.bound)
-    {
-        r_i.bounded = true;
-    }
-    else
-    {
-        r_i.bounded = false;
-    }
+    r_i.bounded = (num_binding == r_i.bound);
 }
 
 void Controller::update(long iterations)
@@ -1104,7 +1118,7 @@ void Controller::update(long iterations)
     states_t = this->states;
     std::vector<std::vector<Robot>> neighbors = this->getAllRobotsNeighborns(this->states);
 
-#ifdef USE_OPENMP_    
+#ifdef USE_OPENMP_
 #pragma omp parallel for
     for (int i = 0; i < this->robots; ++i)
     {
@@ -1123,29 +1137,36 @@ void Controller::update(long iterations)
 
     for (int i = 0; i < this->robots; ++i)
     {
+
         // Holonomic to differential driver controller
-        geometry_msgs::Twist v;
-        double theta_ = atan2(this->states[i].velocity.y, this->states[i].velocity.x);
-        double err_ = theta_ - this->global_poses[i].theta;
-        double velx = sqrt(this->states[i].velocity.y * this->states[i].velocity.y + this->states[i].velocity.x * this->states[i].velocity.x) * 2.0;
+        // geometry_msgs::Twist v;
+        geometry_msgs::PoseStamped v;
+        // double theta_ = atan2(this->states[i].velocity.y, this->states[i].velocity.x);
+        // double err_ = theta_ - this->global_poses[i].theta;
+        // double velx = sqrt(this->states[i].velocity.y * this->states[i].velocity.y + this->states[i].velocity.x * this->states[i].velocity.x) * 2.0;
 
-        if (err_ > M_PI)
-            err_ = -(2.0 * M_PI - err_);
-        else if (err_ < -M_PI)
-            err_ = 2.0 * M_PI + err_;
+        // if (err_ > M_PI)
+        //     err_ = -(2.0 * M_PI - err_);
+        // else if (err_ < -M_PI)
+        //     err_ = 2.0 * M_PI + err_;
 
-        if (abs(err_) > M_PI / 36.0)
+        // if (abs(err_) > M_PI / 36.0)
+        // {
+        //     v.linear.x = std::min(velx, 0.02);
+        //     v.angular.z = 0.6 * err_; //1.6 * err_;
+        // }
+        // else
+        // {
+        //     v.linear.x = std::min(velx, 0.06);
+        //     v.angular.z = 0.05 * err_; //0.8 * err_;
+        // }
+        v.pose.position.x = this->states[i].position.x + this->states[i].velocity.x;
+        v.pose.position.y = this->states[i].position.y + this->states[i].velocity.y;
+        if (!this->states[i].anchor)
         {
-            v.linear.x = std::min(velx, 0.06);
-            v.angular.z = 1.2 * err_;//1.6 * err_;
-        }
-        else
-        {
-            v.linear.x = std::min(velx, 0.12);
-            v.angular.z = 0.4 * err_;//0.8 * err_;
+            this->r_cmdvel_[i].publish(v);
         }
 
-        this->r_cmdvel_[i].publish(v);
         this->setRobotColor(this->states[i], (int)this->states[i].type);
     }
 }
@@ -1163,7 +1184,7 @@ int main(int argc, char **argv)
     ROS_INFO("[Main] Instantiating an object of type Controller");
     Controller control(&nh);
 
-    ros::Rate rate(15);
+    ros::Rate rate(20);
     uint64_t iterations = 0;
     while (ros::ok())
     {
