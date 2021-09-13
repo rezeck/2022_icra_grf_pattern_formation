@@ -1,12 +1,12 @@
 <launch>
 		<!-- <arg name="robots" default="108"/>
 		<arg name="groups" default="72:18:18" /> -->
-		<arg name="robots" default="180"/>
-		<arg name="groups" default="130:50" />
+		<arg name="robots" default="48"/>
+		<arg name="groups" default="40:8" />
 		<!-- <arg name="groups" default="80:20" /> -->
 		<arg name="world" default="5"/>
-		<arg name="sensing" default="0.6"/>
-		<arg name="safezone" default="0.6"/>
+		<arg name="sensing" default="0.8"/>
+		<arg name="safezone" default="0.8"/>
 		<arg name="seed" default="4"/>
 		<arg name="log" default="true"/>
 		<arg name="gui" default="true"/>

@@ -100,10 +100,11 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             // r.mass = 0.1;            // Mass H
             // r.radius = 53;           // Radius of H
 
-            r.bound = 2;             /* O */
-            r.orbitals.push_back(2); // Number of O
+            r.bound = 1;             /* O */
+            r.orbitals.push_back(0); // Number of O
             r.orbitals.push_back(1); // Number of C
-            r.mass = 1.6;            // Mass O
+            r.orbitals.push_back(0); // Number of N
+            r.mass = 1.8*1.6;            // Mass O
             r.radius = 60;           // Radius of O
             break;
 
@@ -121,12 +122,13 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             // r.mass = 1.6;            // Mass O
             // r.radius = 60;           // Radius of O
 
-            r.bound = 4;             /* C */
-            r.orbitals.push_back(2); // Number of H
+            r.bound = 5;             /* C */
+            r.orbitals.push_back(4); // Number of H
             r.orbitals.push_back(0); // Number of N
+            r.orbitals.push_back(1); // Number of N
             // r.orbitals.push_back(2); // Number of C
-            r.mass = 1.2;            // Mass O
-            r.radius = 70;           // Radius of O
+            r.mass = 1.8*1.2;  // Mass O
+            r.radius = 70; // Radius of O
             break;
 
             // case 2:
@@ -168,6 +170,119 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         }
         this->states.push_back(r);
     }
+
+    double A = 1.5;
+    this->states[0].type = 2;
+    this->states[0].mass = 200;
+    this->states[0].radius = 20;
+    this->states[0].anchor = true;
+    this->states[0].bound = 1;
+    this->states[0].orbitals.clear();
+    this->states[0].orbitals.push_back(0); // Number of O
+    this->states[0].orbitals.push_back(1); // Number of C
+    this->states[0].orbitals.push_back(0); // Number of X
+    this->states[0].position.x = -A;
+    this->states[0].position.y = -A;
+    this->states[0].velocity.x = 0;
+    this->states[0].velocity.y = 0;
+
+    this->states[1].type = 2;
+    this->states[1].mass = 200;
+    this->states[1].radius = 20;
+    this->states[1].anchor = true;
+    this->states[1].bound = 1;
+    this->states[1].orbitals.clear();
+    this->states[1].orbitals.push_back(0); // Number of O
+    this->states[1].orbitals.push_back(1); // Number of C
+    this->states[1].orbitals.push_back(0); // Number of X
+    this->states[1].position.x = 0;
+    this->states[1].position.y = -A;
+    this->states[1].velocity.x = 0;
+    this->states[1].velocity.y = 0;
+
+    this->states[2].type = 2;
+    this->states[2].mass = 200;
+    this->states[2].radius = 20;
+    this->states[2].anchor = true;
+    this->states[2].bound = 1;
+    this->states[2].orbitals.clear();
+    this->states[2].orbitals.push_back(0); // Number of O
+    this->states[2].orbitals.push_back(1); // Number of C
+    this->states[2].orbitals.push_back(0); // Number of X
+    this->states[2].position.x = A;
+    this->states[2].position.y = -A;
+    this->states[2].velocity.x = 0;
+    this->states[2].velocity.y = 0;
+
+    this->states[3].type = 2;
+    this->states[3].mass = 200;
+    this->states[3].radius = 20;
+    this->states[3].anchor = true;
+    this->states[3].bound = 1;
+    this->states[3].orbitals.clear();
+    this->states[3].orbitals.push_back(0); // Number of O
+    this->states[3].orbitals.push_back(1); // Number of C
+    this->states[3].orbitals.push_back(0); // Number of X
+    this->states[3].position.x = A;
+    this->states[3].position.y = 0;
+    this->states[3].velocity.x = 0;
+    this->states[3].velocity.y = 0;
+
+    this->states[4].type = 2;
+    this->states[4].mass = 200;
+    this->states[4].radius = 20;
+    this->states[4].anchor = true;
+    this->states[4].bound = 1;
+    this->states[4].orbitals.clear();
+    this->states[4].orbitals.push_back(0); // Number of O
+    this->states[4].orbitals.push_back(1); // Number of C
+    this->states[4].orbitals.push_back(0); // Number of X
+    this->states[4].position.x = A;
+    this->states[4].position.y = A;
+    this->states[4].velocity.x = 0;
+    this->states[4].velocity.y = 0;
+
+    this->states[5].type = 2;
+    this->states[5].mass = 200;
+    this->states[5].radius = 20;
+    this->states[5].anchor = true;
+    this->states[5].bound = 1;
+    this->states[5].orbitals.clear();
+    this->states[5].orbitals.push_back(0); // Number of O
+    this->states[5].orbitals.push_back(1); // Number of C
+    this->states[5].orbitals.push_back(0); // Number of X
+    this->states[5].position.x = 0;
+    this->states[5].position.y = A;
+    this->states[5].velocity.x = 0;
+    this->states[5].velocity.y = 0;
+
+    this->states[6].type = 2;
+    this->states[6].mass = 200;
+    this->states[6].radius = 20;
+    this->states[6].anchor = true;
+    this->states[6].bound = 1;
+    this->states[6].orbitals.clear();
+    this->states[6].orbitals.push_back(0); // Number of O
+    this->states[6].orbitals.push_back(1); // Number of C
+    this->states[6].orbitals.push_back(0); // Number of X
+    this->states[6].position.x = -A;
+    this->states[6].position.y = A;
+    this->states[6].velocity.x = 0;
+    this->states[6].velocity.y = 0;
+
+    this->states[7].type = 2;
+    this->states[7].mass = 200;
+    this->states[7].radius = 20;
+    this->states[7].anchor = true;
+    this->states[7].bound = 1;
+    this->states[7].orbitals.clear();
+    this->states[7].orbitals.push_back(0); // Number of O
+    this->states[7].orbitals.push_back(1); // Number of C
+    this->states[7].orbitals.push_back(0); // Number of X
+    this->states[7].position.x = -A;
+    this->states[7].position.y = 0;
+    this->states[7].velocity.x = 0;
+    this->states[7].velocity.y = 0;
 
     if (this->gui)
     {
@@ -219,14 +334,14 @@ bool Controller::draw(int step)
         switch ((int)this->states[i].type)
         { // BGR
         case 0:
-            color = cv::Scalar(0, 0, 128);
+            color = cv::Scalar(128, 128, 128);
             break; // maroon
         case 1:
             color = cv::Scalar(128, 0, 0);
             break; // dark slate gray
         case 2:
             // color = cv::Scalar(138, 43, 226);
-            color = cv::Scalar(128, 0, 0);
+            color = cv::Scalar(50, 50, 50);
             break; // blue violet
         case 3:
             color = cv::Scalar(199, 21, 133);
@@ -418,14 +533,19 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         // Indicator function f: 1 -> same type, f: -1 -> otherwise
         double I = 2.0 * (int)(r_i.type == states_t[i].type) - 1.0;
 
-        I = -0.002;
+
+        if (states_t[i].type==2 && r_i.type==0){
+
+        }
+        I = -0.00005;
+        
         // I = 0.2;
-        dist = dist * 0.80;
+        dist = dist * 0.8;
 
         // if (states_t[i].type == r_i.type)
         // {
         //     if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
-        //         if (r_i.binding[1][0] == states_t[i].binding[1][0])
+        //         if (r_i.binding[1][0] == states_t[i].binding[1][0] || states_t[i].anchor || r_i.anchor)
         //         {
         //             I = 0.8;
         //         }
@@ -441,7 +561,7 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
                 {
                     if (states_t[i].anchor)
                     {
-                        I = 16;
+                        I = 88;
                         // dist = dist * 1.5;
                     }
                     else if (states_t[i].bounded == r_i.bounded)
@@ -458,10 +578,10 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
             }
         }
 
-        // if (r_i.type == 1 && states_t[i].type == 2)
-        // {
-        //     dist = dist * 1.90;
-        // }
+        if (r_i.type == 1 && states_t[i].type == 2)
+        {
+            dist = dist * 4.50;
+        }
 
         if ((I > 0) && (dist > this->sensing))
         {
