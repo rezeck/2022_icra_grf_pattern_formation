@@ -38,10 +38,13 @@
 #define USE_NOISE
 // #define V_CONTROL
 
-class Vector2{
+class Vector2
+{
 public:
-	double x;
-	double y;
+    Vector2() : x(0.0), y(0.0){};
+    Vector2(double x_, double y_) : x(x_), y(y_){};
+    double x;
+    double y;
 };
 
 class Robot{
