@@ -47,11 +47,9 @@
 // #define OBJECT_POS_X 0.0
 // #define OBJECT_POS_Y 0.0
 
-// #define SHOW_TARGET_VEL_RVIZ
-// #define SHOW_OBSTACLES_RVIZ
-// #define SHOW_OBJECT_RVIZ
-// #define SHOW_GRADIENT_OBJECT_RVIZ
-// #define SHOW_NEIGHBORNS_RVIZ
+#define SHOW_OBSTACLES_RVIZ
+#define SHOW_NEIGHBORNS_RVIZ
+#define SHOW_TARGET_VEL_RVIZ
 
 // #define ROBOT_COLOR_STATE
 
@@ -92,6 +90,7 @@ public:
     bool bounded;
     std::vector<unsigned int> anchors;
     double mass;
+    double charge;
     std::vector<std::vector<unsigned int>> binding;
     std::vector<unsigned int> orbitals;
 };
