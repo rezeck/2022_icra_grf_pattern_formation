@@ -7,19 +7,19 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
 { // constructor
     this->sensing = 0.50;
     ros::param::get("/sensing", this->sensing);
-    this->safezone = 0.15;
+    this->safezone = 0.12;
     ros::param::get("/safezone", this->safezone);
     this->mass = 5.0;
     ros::param::get("/mass", this->mass);
-    this->vmax = 0.30;
+    this->vmax = 0.20;
     ros::param::get("/vmax", this->vmax);
-    this->vmax = 0.12;
+    // this->vmax = 0.12;
     this->dt = 0.01;
     ros::param::get("/dt", this->dt);
     this->worldsize = 3.90;
     ros::param::get("/worldsize", this->worldsize);
 
-    this->robots = 20;
+    this->robots = 7;
     ros::param::get("/robots", this->robots);
     this->groups = 2;
     ros::param::get("/groups", this->groups);
@@ -39,9 +39,9 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
         /* Topics name */
         std::string robot_name = "/hero_" + boost::lexical_cast<std::string>(i);
         ROS_INFO("Starting robot: %s", robot_name.c_str());
-        std::string cmd_topic = robot_name + "/cmd_vel";
+        std::string cmd_topic = robot_name + "/velocity_controller/cmd_vel";
         // std::string cmd_topic = robot_name + "/goal";
-        std::string pose_topic = robot_name + "/odom";
+        std::string pose_topic = robot_name + "/pose";
         std::string color_topic = robot_name + "/led";
         /* Topics */
         this->r_cmdvel_.push_back(nh_.advertise<geometry_msgs::Twist>(cmd_topic.c_str(), 1));
@@ -51,7 +51,7 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
 
         /* Get robot type */
         // int type_ = i % 5 > 3;
-        int type_ = i < 7;
+        int type_ = i > 2;
         ros::param::get(robot_name + "/type", type_);
         /* Instatiate robot global states */
         geometry_msgs::Pose2D p;
@@ -77,7 +77,7 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             r.orbitals.push_back(1); // Number of C
             r.orbitals.push_back(0); // Number of C
             // r.orbitals.push_back(1); // Number of X
-            r.mass = 1.4 * 16; // 0.3;
+            r.mass = 2.4 * 16; // 0.3;
             r.charge = 6;
             break;
 
@@ -87,7 +87,7 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             r.orbitals.push_back(0); // Number of C
             r.orbitals.push_back(1); // Number of C
             // r.orbitals.push_back(1); // Number of X
-            r.mass = 1.4 * 12; // 0.4;
+            r.mass = 2.4 * 12; // 0.4;
             r.charge = 7.8;
             break;
 
@@ -109,7 +109,7 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             //     break;
         }
 
-        if (i < 2)
+        if (i >= 5)
         { // this robots are anchors
             r.type = 2;
             r.mass = 200;
@@ -140,10 +140,15 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
     obstacle_.cm_position = Vector2(0.0, 0.0);
     obstacle_.is_obstacle = true;
     obstacle_.name = "arena";
-    obstacle_.local_corners.push_back(Vector2(-this->worldsize * 0.5, -this->worldsize * 0.5));
-    obstacle_.local_corners.push_back(Vector2(this->worldsize * 0.5, -this->worldsize * 0.5));
-    obstacle_.local_corners.push_back(Vector2(this->worldsize * 0.5, this->worldsize * 0.5));
-    obstacle_.local_corners.push_back(Vector2(-this->worldsize * 0.5, this->worldsize * 0.5));
+    obstacle_.local_corners.push_back(Vector2(3.82789652681, 5.77833170766));
+    obstacle_.local_corners.push_back(Vector2(3.87653107213, 4.36551027572));
+    obstacle_.local_corners.push_back(Vector2(5.65981361048, 4.33751717604));
+    obstacle_.local_corners.push_back(Vector2(5.67521077434, 5.71032389179));
+
+    // obstacle_.local_corners.push_back(Vector2(-this->worldsize * 0.5, -this->worldsize * 0.5));
+    // obstacle_.local_corners.push_back(Vector2(this->worldsize * 0.5, -this->worldsize * 0.5));
+    // obstacle_.local_corners.push_back(Vector2(this->worldsize * 0.5, this->worldsize * 0.5));
+    // obstacle_.local_corners.push_back(Vector2(-this->worldsize * 0.5, this->worldsize * 0.5));
     obstacle_.global_corners = obstacle_.local_corners;
     this->bodies_state.push_back(obstacle_);
 }
@@ -195,11 +200,11 @@ std_msgs::ColorRGBA Controller::getColorByType(uint8_t type)
     { // BGR
     case 0:
         color.r = 0;
-        color.g = 0;
-        color.b = 128;
+        color.g = 255;
+        color.b = 255;
         break; // maroon
     case 1:
-        color.r = 128;
+        color.r = 255;
         color.g = 0;
         color.b = 0;
         break; // dark slate gray
@@ -760,7 +765,8 @@ std::vector<Vector2> Controller::getObstaclesPoints(double sensing, Robot r)
     this->show_obstacles_rviz.publish(m);
     m.points.clear();
     m.action = visualization_msgs::Marker::ADD;
-    m.header.frame_id = "/hero_" + boost::lexical_cast<std::string>((int)r.id) + "/odom";
+    // m.header.frame_id = "/hero_" + boost::lexical_cast<std::string>((int)r.id) + "/odom";
+    m.header.frame_id = "/world";
     m.color.r = 1.0;
     m.color.g = 0.0;
     m.color.b = 1.0;
@@ -846,8 +852,8 @@ Vector2 Controller::metropolisHastings(Robot r_i, std::vector<Robot> states_t)
         // Get a sample of velocity considering normal distribution
         // std::normal_distribution<double> norm_vx(r_i.type - r_i.position.x, 0.2);
         // std::normal_distribution<double> norm_vy(r_i.type - r_i.position.y, 0.2);
-        std::normal_distribution<double> norm_vx(r_i.velocity.x, 0.03);
-        std::normal_distribution<double> norm_vy(r_i.velocity.y, 0.03);
+        std::normal_distribution<double> norm_vx(r_i.velocity.x, 0.05);
+        std::normal_distribution<double> norm_vy(r_i.velocity.y, 0.05);
         Vector2 sampled_vel;
         sampled_vel.x = norm_vx(generator_x);
         sampled_vel.y = norm_vy(generator_y);
@@ -1155,7 +1161,8 @@ void Controller::update(long iterations)
     {
         /* Insert robot i */
         Robot r_i = states_t[i];
-        m.header.frame_id = "/hero_" + boost::lexical_cast<std::string>(i) + "/odom";
+        // m.header.frame_id = "/hero_" + boost::lexical_cast<std::string>(i) + "/odom";
+        m.header.frame_id = "/world";
         for (int k = 0; k < (int)r_i.binding.size(); k++)
         {
             /* For each robot (y) in the orbit (k). */
@@ -1221,7 +1228,8 @@ void Controller::update(long iterations)
             continue;
         }
 #ifdef SHOW_TARGET_VEL_RVIZ
-        m.header.frame_id = "/hero_" + boost::lexical_cast<std::string>(i) + "/odom";
+        // m.header.frame_id = "/hero_" + boost::lexical_cast<std::string>(i) + "/odom";
+        m.header.frame_id = "/world";
         m.id = i;
         m.pose.position.x = this->global_poses[i].x;
         m.pose.position.y = this->global_poses[i].y;
@@ -1237,7 +1245,7 @@ void Controller::update(long iterations)
 
         // Holonomic to differential driver controller
         geometry_msgs::Twist v;
-        v.linear.x = std::min(sqrt(this->states[i].velocity.y * this->states[i].velocity.y + this->states[i].velocity.x * this->states[i].velocity.x), 0.08);
+        v.linear.x = sqrt(this->states[i].velocity.y * this->states[i].velocity.y + this->states[i].velocity.x * this->states[i].velocity.x);;//std::min(sqrt(this->states[i].velocity.y * this->states[i].velocity.y + this->states[i].velocity.x * this->states[i].velocity.x), 0.05);
         double theta_ = atan2(this->states[i].velocity.y, this->states[i].velocity.x);
         double theta_diff = (theta_ - this->global_poses[i].theta);
 
@@ -1246,7 +1254,19 @@ void Controller::update(long iterations)
         else if (theta_diff < -M_PI)
             theta_diff = 2.0 * M_PI + theta_diff;
 
-        v.angular.z = theta_diff * 4.5;
+        v.linear.x = 0.25 * v.linear.x;
+        if (abs(theta_diff) > M_PI / 36.0)
+        {
+            v.linear.x = std::max(std::min(v.linear.x, 0.045), 0.045);
+            v.angular.z = 3.6 * theta_diff/3.0;
+        }
+        else
+        {
+            v.linear.x = std::max(std::min(v.linear.x, 0.075), 0.045);
+            v.angular.z = 1.4 * theta_diff/3.0;
+        }
+
+        v.angular.z = theta_diff;
         // if (fabs(theta_diff) > M_PI_2)
         // {
         //     if (theta_diff > 0)
@@ -1276,7 +1296,7 @@ int main(int argc, char **argv)
     ROS_INFO("[Main] Instantiating an object of type Controller");
     Controller control(&nh);
 
-    ros::Rate rate(30);
+    ros::Rate rate(15);
     uint64_t iterations = 0;
     while (ros::ok())
     {

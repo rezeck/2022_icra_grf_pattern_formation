@@ -150,6 +150,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/grf_swarm.cpp)
 add_executable(${PROJECT_NAME}_gazebo src/grf_ros_gazebo.cpp)
+add_executable(${PROJECT_NAME}_real src/grf_ros_real.cpp)
 # add_executable(${PROJECT_NAME}_nav src/grf_swarm_nav.cpp)
 
 ## Rename C++ executable without prefix
@@ -173,6 +174,10 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 
 target_link_libraries(${PROJECT_NAME}_gazebo
+  ${catkin_LIBRARIES}  ${OpenCV_LIBS} ${OpenMP_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME}_real
   ${catkin_LIBRARIES}  ${OpenCV_LIBS} ${OpenMP_INCLUDE_DIRS}
 )
 
