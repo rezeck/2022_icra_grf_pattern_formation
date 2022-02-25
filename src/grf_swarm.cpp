@@ -237,7 +237,7 @@ bool Controller::draw(int step)
 #define W_Y 1000
 
     cv::Mat board(W_Y, W_X, CV_8UC3, cv::Scalar(255, 255, 255));
-    // cv::Mat board = cv::imread("/home/rezeck/catkin_ws/src/2022_icra_grf_pattern_formation/world/background.png", cv::IMREAD_COLOR);
+    // cv::Mat board = cv::imread("/home/rezeck/catkin_ws/src/gibbs_swarm_pattern_formation/world/background.png", cv::IMREAD_COLOR);
     cv::Scalar color;
     cv::rectangle(board, cv::Point(50, 50), cv::Point(W_X - 50, W_Y - 50), cv::Scalar(80, 80, 80), 4, 8);
 
