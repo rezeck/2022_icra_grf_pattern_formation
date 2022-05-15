@@ -2,36 +2,36 @@
 robots:
   hydrogen: # Hygrogen-like robot
     type: 0
-    mass: 0.1
+    mass: 1.0
     radius: 53.0
-    charge: 1.0
-    amount: 80
+    charge: 5.0
+    amount: 120
     bound: 1
     orbitals: [1, 1, 1, 1] # [hydrogen, oxygen, nitrogen, carbon]
 
   oxygen: # Oxygen-like robot
     type: 1
-    mass: 1.6
+    mass: 16.0
     radius: 60.0
-    charge: 2.00
+    charge: 15.00
     amount: 0
     bound: 2
     orbitals: [2, 0, 0, 0] # [hydrogen, oxygen, nitrogen, carbon]
 
   nitrogen: # Nitrogen-like robot
     type: 2
-    mass: 1.4
+    mass: 14.0
     radius: 65.0
-    charge: 3.00
-    amount: 20
+    charge: 10.00
+    amount: 30
     bound: 3
     orbitals: [3, 0, 0, 1] # [hydrogen, oxygen, nitrogen, carbon]     
 
   carbon: # Carbon-like robot
     type: 3
-    mass: 1.2
+    mass: 12.0
     radius: 70.0
-    charge: 4.00
+    charge: 10.00
     amount: 30
     bound: 4
-    orbitals: [2, 0, 1, 2] # [hydrogen, oxygen, nitrogen, carbon]    
+    orbitals: [3, 0, 1, 2] # [hydrogen, oxygen, nitrogen, carbon]    

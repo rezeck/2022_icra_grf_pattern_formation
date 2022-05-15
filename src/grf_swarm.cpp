@@ -172,9 +172,8 @@ bool Controller::draw(int step)
 
     cv::putText(board, "Molecules: " + std::to_string(this->molecules_metric), cv::Point(800, 35), cv::FONT_HERSHEY_TRIPLEX,
                 0.6, CV_RGB(80, 80, 80), 1);
-                
 
-    float c = (W_Y - 100) / 10.0;
+    float m2pixel = (W_Y - 100) / (2 * this->worldsize);
 
     if (this->show_velocity)
     {
@@ -182,9 +181,9 @@ bool Controller::draw(int step)
         {
             Vector2 vel;
             vel = this->saturation(this->states[i].velocity, 0.3);
-            vel.x = W_X / 2.0 + c * (this->states[i].position.x + vel.x);
-            vel.y = W_Y / 2.0 - c * (this->states[i].position.y + vel.y);
-            cv::arrowedLine(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(vel.x, vel.y), cv::Scalar(220, 220, 220), 2, 8);
+            vel.x = W_X / 2.0 + m2pixel * (this->states[i].position.x + vel.x);
+            vel.y = W_Y / 2.0 - m2pixel * (this->states[i].position.y + vel.y);
+            cv::arrowedLine(board, cv::Point(W_X / 2.0 + m2pixel * this->states[i].position.x, W_Y / 2.0 - m2pixel * this->states[i].position.y), cv::Point(vel.x, vel.y), cv::Scalar(220, 220, 220), 2, 8);
         }
     }
 
@@ -192,7 +191,7 @@ bool Controller::draw(int step)
     {
         for (int i = 0; i < this->robots; i++)
         {
-            cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->sensing, cv::Scalar(240, 240, 240), 1, 8);
+            cv::circle(board, cv::Point(W_X / 2.0 + m2pixel * this->states[i].position.x, W_Y / 2.0 - m2pixel * this->states[i].position.y), m2pixel * this->sensing, cv::Scalar(240, 240, 240), 1, 8);
         }
     }
 
@@ -304,7 +303,11 @@ bool Controller::draw(int step)
         // continue;
         // }
 
-        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].radius * 0.0020, color, -1, 8);
+        cv::circle(board, cv::Point(W_X / 2.0 + m2pixel * this->states[i].position.x, W_Y / 2.0 - m2pixel * this->states[i].position.y), m2pixel * this->states[i].radius * 0.0018, color, -1, 8);
+        if (this->states[i].bounded)
+        {
+            cv::circle(board, cv::Point(W_X / 2.0 + m2pixel * this->states[i].position.x, W_Y / 2.0 - m2pixel * this->states[i].position.y), m2pixel * this->states[i].radius * 0.0005, cv::Scalar(0, 255, 0), -1, 8);
+        }
         // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
         if (this->show_bounding)
         {
@@ -312,13 +315,16 @@ bool Controller::draw(int step)
             {
                 for (int w = 0; w < this->states[i].binding[k].size(); w++)
                 {
-                    cv::line(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(W_X / 2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y / 2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
+                    cv::line(board, cv::Point(W_X / 2.0 + m2pixel * this->states[i].position.x, W_Y / 2.0 - m2pixel * this->states[i].position.y),
+                             cv::Point(W_X / 2.0 + m2pixel * this->states[this->states[i].binding[k][w]].position.x,
+                                       W_Y / 2.0 - m2pixel * this->states[this->states[i].binding[k][w]].position.y),
+                             cv::Scalar(112, 128, 144), 1);
                 }
             }
         }
         if (this->show_id)
         {
-            cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X / 2.0 + c * this->states[i].position.x + 4, W_Y / 2.0 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
+            cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X / 2.0 + m2pixel * this->states[i].position.x + 4, W_Y / 2.0 - m2pixel * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
                         0.4, CV_RGB(0, 0, 0), 1);
         }
     }
@@ -327,7 +333,7 @@ bool Controller::draw(int step)
     {
         for (int i = 0; i < this->obstacles.size(); i++)
         {
-            cv::circle(board, cv::Point(W_X / 2.0 + c * this->obstacles[i].x, W_Y / 2.0 - c * this->obstacles[i].y), c * 0.05, cv::Scalar(0, 0, 255), -1, 8);
+            cv::circle(board, cv::Point(W_X / 2.0 + m2pixel * this->obstacles[i].x, W_Y / 2.0 - m2pixel * this->obstacles[i].y), m2pixel * 0.05, cv::Scalar(0, 0, 255), -1, 8);
         }
         this->obstacles.clear();
     }
@@ -360,7 +366,7 @@ double Controller::fof_Us(Robot r_i, Vector2 v)
     // Get potential for the sampled velocity
     double Us = 0.0f;
     // for each obstacles point in the world (same when using a laser)
-    std::vector<Vector2> obstacles = this->getObstaclesPoints(this->safezone*0.8, r_i.position);
+    std::vector<Vector2> obstacles = this->getObstaclesPoints(this->safezone * 0.8, r_i.position);
     // ROS_INFO("Number of obstacles: %d", obstacles.size());
     for (int i = 0; i < obstacles.size(); ++i)
     {
@@ -399,21 +405,25 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         n_p.x = states_t[i].position.x + states_t[i].velocity.x * this->dt;
         n_p.y = states_t[i].position.y + states_t[i].velocity.y * this->dt;
         double dist = this->euclidean(r_i.position, n_p);
-        // double dist = this->euclidean(r_i.position, states_t[i].position);
         // Indicator function f: 1 -> same type, f: -1 -> otherwise
         double I = -0.00005;
         // I = 0.2; // water and methane group molecules
+        I = -0.0005;
+        dist = dist * 0.70;
 
-        dist = dist * 0.80;
-
-        if (states_t[i].type == r_i.type)
-        {
-            if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
-                if (r_i.binding[1][0] == states_t[i].binding[1][0])
-                {
-                    I = 0.8;
-                }
-        }
+        /* Hydrogen bouding */
+        // if (r_i.type == 0 || states_t[i].type == 0)
+        // {
+        //     I = 7;
+        // }
+        // if (r_i.type == 0 && states_t[i].type == r_i.type)
+        // {
+        //     if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
+        //         if (r_i.binding[1][0] == states_t[i].binding[1][0])
+        //         {
+        //             I = 8;
+        //         }
+        // }
 
         /* For each orbit (k) in the robot (r_i). */
         for (int k = 0; k < r_i.binding.size(); k++)
@@ -423,49 +433,30 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
             {
                 if (states_t[i].id == r_i.binding[k][y])
                 {
-                    if (states_t[i].anchor)
+                    if (states_t[i].bounded == r_i.bounded)
                     {
-                        I = 108;
-                        // dist = dist * 1.5;
-                    }
-                    else if (states_t[i].bounded == r_i.bounded)
-                    {
-                        I = 3;
+                        // I = 3;
                         // dist = dist * 1.4;
+                        I = r_i.charge * states_t[i].charge; // * 5.0 / 3.0; // 4
+                        //  dist = dist * 0.6;
                     }
                     else
                     {
-                        I = 2;
+                        // I = 2;
                         // dist = dist * 1.3;
+                        I = r_i.charge * states_t[i].charge; // 3
+                        // dist = dist * 0.7;
                     }
                 }
             }
         }
 
-        // if (r_i.type == 1 && states_t[i].type == 3)
-        // if (states_t[i].type == 3)
-        // {
-        //     dist = dist * 4.50;
-        // }
-
-        // if (r_i.type == 0 && states_t[i].type == 3)
-        // {
-        //     dist = dist * 4.50;
-        // }
-
         if ((I > 0) && (dist > this->sensing))
         {
-            if (states_t[i].anchor)
-            {
-                return 10000000;
-            }
-            else
-            {
-                return 100000;
-            }
+            return 1e4;
         }
 
-        Ust += this->coulombBuckinghamPotential(dist * 0.8, 0.04, 0.04, 0.8, 1.0, 16.0 * I, -1.0);
+        Ust += this->coulombBuckinghamPotential(dist, 0.04, 0.04, 0.8, 1.0, I, -1.0);
 
         // Get the sum of the relative velocity of all my neighbor and they mass
         if (I > 0 && (dist < this->sensing) && (dist > this->safezone))
@@ -475,15 +466,14 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
             group_mass += states_t[i].mass;
         }
     }
+
     // Now compute the kinetic Energy using relative velocity
     group_vrel = this->saturation(group_vrel, 1.0);
     double group_speed = (group_vrel.x * group_vrel.x + group_vrel.y * group_vrel.y) + 1.0e-9;
     double my_speed = (v.x * v.x + v.y * v.y);
-    // double group_speed = sqrt(group_vrel.x*group_vrel.x + group_vrel.y*group_vrel.y) + 1.0e-9;
-    // double my_speed = sqrt(v.x*v.x + v.y*v.y);
 
     Ust += this->kineticEnergy(group_speed, group_mass) + this->kineticEnergy(group_mass, this->vmax - my_speed);
-    // Ust += this->kineticEnergy(group_speed, group_mass) - this->kineticEnergy(group_mass, my_speed);
+
     return Ust;
 }
 
@@ -798,11 +788,11 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
             if (k == r_i.type)
             {
                 // is there any room for me?
-                isthereanyroom = ( (unsigned int)n_j.binding[k].size()  < n_j.orbitals[k]);
-                isthereanyroom = isthereanyroom && ( ((unsigned int) n_j.binding[k].size() + nbindingsofar) < n_j.bound);
+                isthereanyroom = ((unsigned int)n_j.binding[k].size() < n_j.orbitals[k]);
+                isthereanyroom = isthereanyroom && (((unsigned int)n_j.binding[k].size() + nbindingsofar) < n_j.bound);
                 break;
             }
-            nbindingsofar += (unsigned int) n_j.binding[k].size();
+            nbindingsofar += (unsigned int)n_j.binding[k].size();
         }
 
         /* Check if (n_j) has r_i in the binding list. There are already connected? */
@@ -924,9 +914,9 @@ void Controller::update(long iterations)
     if (this->logging)
     {
         this->logfile << iterations << ','
-                                    << this->consensus_metric_v << ','
-                                    << this->metric_v << ','
-                                    << this->molecules_metric <<  "\n";
+                      << this->consensus_metric_v << ','
+                      << this->metric_v << ','
+                      << this->molecules_metric << "\n";
     }
 }
 
@@ -977,6 +967,6 @@ int main(int argc, char **argv)
         if (control.babystep)
             cvok = (cv::waitKey(0) != 27);
     } while (ros::ok() && (iterations < max_it) && cvok);
-   control.logfile.close();
+    control.logfile.close();
     return 0;
 }
