@@ -1,0 +1,13 @@
+<launch>
+    <group ns="$(anon grf_controller)">
+        <rosparam command="load" file="$(find gibbs_swarm_pattern_formation)/config/sim.yaml" />
+
+        <!-- Select a swarm -->
+        <!-- <rosparam command="load" file="$(find gibbs_swarm_pattern_formation)/config/water.yaml" /> -->
+        <!-- <rosparam command="load" file="$(find gibbs_swarm_pattern_formation)/config/methane.yaml" /> -->
+        <rosparam command="load" file="$(find gibbs_swarm_pattern_formation)/config/polyamines.yaml" />
+
+        <node name="grf_controller" pkg="gibbs_swarm_pattern_formation" type="gibbs_swarm_pattern_formation_node" output="screen" required="true"></node>
+    </group>
+
+</launch>   

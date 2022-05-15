@@ -1,0 +1,37 @@
+# Heterogeneity
+robots:
+  hydrogen: # Hygrogen-like robot
+    type: 0
+    mass: 0.1
+    radius: 53.0
+    charge: 1.0
+    amount: 80
+    bound: 1
+    orbitals: [1, 1, 1, 1] # [hydrogen, oxygen, nitrogen, carbon]
+
+  oxygen: # Oxygen-like robot
+    type: 1
+    mass: 1.6
+    radius: 60.0
+    charge: 2.00
+    amount: 40
+    bound: 2
+    orbitals: [2, 0, 0, 0] # [hydrogen, oxygen, nitrogen, carbon]
+
+  nitrogen: # Nitrogen-like robot
+    type: 2
+    mass: 1.4
+    radius: 65.0
+    charge: 3.00
+    amount: 0
+    bound: 3
+    orbitals: [3, 0, 0, 1] # [hydrogen, oxygen, nitrogen, carbon]     
+
+  carbon: # Carbon-like robot
+    type: 3
+    mass: 1.2
+    radius: 70.0
+    charge: 4.00
+    amount: 0
+    bound: 4
+    orbitals: [4, 0, 0, 0] # [hydrogen, oxygen, nitrogen, carbon]    

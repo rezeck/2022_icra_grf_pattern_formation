@@ -1,16 +1,16 @@
 <launch>
 		<!-- <arg name="robots" default="108"/>
 		<arg name="groups" default="72:18:18" /> -->
-		<arg name="robots" default="87"/>
-		<arg name="groups" default="67:13:7" />
-		<!-- <arg name="groups" default="80:20" /> -->
+		<arg name="robots" default="100"/>
+		<!-- <arg name="groups" default="67:13:7" /> -->
+		<arg name="groups" default="66:34" />
 		<arg name="world" default="5"/>
 		<arg name="sensing" default="0.8"/>
 		<arg name="safezone" default="0.8"/>
 		<arg name="seed" default="16"/>
 		<arg name="log" default="true"/>
 		<arg name="gui" default="true"/>
-
+			
 		<node name="$(anon grf_controller)" pkg="gibbs_swarm_pattern_formation" type="gibbs_swarm_pattern_formation_node" output="screen" required="true">
 			<param name="nrobots" value="$(arg robots)"/>
 			<param name="ngroups" value="$(arg groups)"/>
