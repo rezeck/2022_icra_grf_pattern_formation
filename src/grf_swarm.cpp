@@ -120,25 +120,26 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
             // Get initial velocities
             r.velocity.x = 1.8 * this->worldsize * (((double)rand() / ((double)(RAND_MAX) + (double)(1))) - 0.5);
             r.velocity.y = 1.8 * this->worldsize * (((double)rand() / ((double)(RAND_MAX) + (double)(1))) - 0.5);
-            // std::cout << "Robot: " << r.id << " ( " << r.position.x << r.position.y << ") (" << r.velocity.x << "," << r.velocity.y << ")" << std::endl;
 
             this->states.push_back(r);
         }
     }
 
     this->logging = false;
-    ros::param::get("~log", this->logging);
+    ros::param::get("log", this->logging);
+    std::cout << "log: " << this->logging << std::endl;
+
     if (this->logging)
     {
-        this->logginfile = "min_swarm_r" + std::to_string(this->robots) + "_g_" + std::to_string(this->groups) + "_s_" + std::to_string(this->sensing) + "_w_" + std::to_string(this->worldsize) + "_run_" + std::to_string(this->seed) + ".log";
+        this->loggingfile = "gibbs_swarm_r" + std::to_string(this->robots) + "_g_" + std::to_string(this->groups) + "_s_" + std::to_string(this->sensing) + "_w_" + std::to_string(this->worldsize) + "_run_" + std::to_string(this->seed) + ".log";
     }
-    std::cout << this->logginfile << std::endl;
+    std::cout << "loggingfile: " << this->loggingfile << std::endl;
 
     ROS_INFO("%d %d %f", this->robots, this->groups, this->sensing);
     if (this->logging)
     {
-        this->logfile.open(this->logginfile);
-        ROS_INFO("\33[92mLog: %s\33[0m", logginfile.c_str());
+        this->logfile.open(this->loggingfile);
+        ROS_INFO("\33[92mLog: %s\33[0m", loggingfile.c_str());
     }
 
     if (this->gui)
@@ -922,7 +923,10 @@ void Controller::update(long iterations)
 
     if (this->logging)
     {
-        this->logfile << this->metric_v << "\n";
+        this->logfile << iterations << ','
+                                    << this->consensus_metric_v << ','
+                                    << this->metric_v << ','
+                                    << this->molecules_metric <<  "\n";
     }
 }
 
@@ -973,5 +977,6 @@ int main(int argc, char **argv)
         if (control.babystep)
             cvok = (cv::waitKey(0) != 27);
     } while (ros::ok() && (iterations < max_it) && cvok);
+   control.logfile.close();
     return 0;
 }

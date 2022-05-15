@@ -114,7 +114,7 @@ public:
     float max_iteration;
 
     std::string worldfile;
-    std::string logginfile;
+    std::string loggingfile;
     std::ofstream logfile;
 
     int seed;
