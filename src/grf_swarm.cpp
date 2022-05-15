@@ -1,32 +1,130 @@
 #include "grf_swarm.h"
+#include "metrics.h"
 
 Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
 { // constructor
-    /* Get params */
-    int flockSize;
+    /* This enable the simulator to use GUI */
+    this->gui = true;
+    ros::param::get("gui", this->gui);
+    std::cout << "gui: " << this->gui << std::endl;
+
+    this->show_velocity = false;
+    ros::param::get("show_velocity", this->show_velocity);
+    std::cout << "show_velocity: " << this->show_velocity << std::endl;
+
+    this->show_sensing = false;
+    ros::param::get("show_sensing", this->show_sensing);
+    std::cout << "show_sensing: " << this->show_sensing << std::endl;
+
+    this->show_id = false;
+    ros::param::get("show_id", this->show_id);
+    std::cout << "show_id: " << this->show_id << std::endl;
+
+    this->show_obstacles = false;
+    ros::param::get("show_obstacles", this->show_obstacles);
+    std::cout << "show_obstacles: " << this->show_obstacles << std::endl;
+
+    this->show_bounding = false;
+    ros::param::get("show_bounding", this->show_bounding);
+    std::cout << "show_bounding: " << this->show_bounding << std::endl;
+
+    this->babystep = false;
+    ros::param::get("babystep", this->babystep);
+    std::cout << "babystep: " << this->babystep << std::endl;
+
     this->seed = 1;
-    this->gui = false;
-    ros::param::get("~nrobots", this->robots);
-    ros::param::get("~ngroups", this->groups);
-    ros::param::get("~seed", this->seed);
-    ros::param::get("~gui", this->gui);
-    flockSize = this->robots / this->groups;
+    ros::param::get("seed", this->seed);
+    std::cout << "seed: " << this->seed << std::endl;
+    srand(this->seed);
 
-    this->sensing = 0.5;
+    this->sensing = 0.8;
+    ros::param::get("sensing", this->sensing);
+    std::cout << "sensing: " << this->sensing << std::endl;
+
     this->safezone = 0.3;
-    ros::param::get("~sensing", this->sensing);
-
-    ros::param::get("~safezone", this->safezone);
+    ros::param::get("safezone", this->safezone);
+    std::cout << "safezone: " << this->safezone << std::endl;
 
     this->worldsize = 5.0;
-    ros::param::get("~worldsize", this->worldsize);
+    ros::param::get("worldsize", this->worldsize);
+    std::cout << "worldsize: " << this->worldsize << std::endl;
 
     this->max_iteration = 20000;
-    ros::param::get("~iterations", this->max_iteration);
-    // std::cout << max_iteration << std::endl;
+    ros::param::get("iterations", this->max_iteration);
+    std::cout << "iterations: " << this->max_iteration << std::endl;
 
-    ros::param::get("~swarmconf", this->swarmconf);
-    // std::cout << swarmconf << std::endl;
+    this->vmax = 1.0;
+    ros::param::get("velocity", this->vmax);
+    std::cout << "velocity: " << this->vmax << std::endl;
+
+    this->dt = 0.02;
+    ros::param::get("dt", this->dt);
+    std::cout << "dt: " << this->dt << std::endl;
+
+    XmlRpc::XmlRpcValue robots;
+    ros::param::get("robots", robots);
+
+    this->robots = 0;
+    this->groups = robots.size();
+    for (XmlRpc::XmlRpcValue::iterator robot = robots.begin(); robot != robots.end(); ++robot)
+    {
+        std::cout << robot->first << ":" << std::endl;
+        std::cout << "  type: " << robot->second["type"] << std::endl;
+        std::cout << "  mass: " << robot->second["mass"] << std::endl;
+        std::cout << "  radius: " << robot->second["radius"] << std::endl;
+        std::cout << "  charge: " << robot->second["charge"] << std::endl;
+        std::cout << "  bound: " << robot->second["bound"] << std::endl;
+        std::cout << "  orbitals: " << robot->second["orbitals"] << std::endl;
+        std::cout << "  amount: " << robot->second["amount"] << std::endl;
+
+        assert(robot->second["amount"].getType() == XmlRpc::XmlRpcValue::TypeInt);
+        int amount = robot->second["amount"];
+        for (int k = 0; k < amount; ++k)
+        {
+            Robot r;
+
+            r.anchor = false;
+            r.bounded = false;
+
+            assert(robot->second["type"].getType() == XmlRpc::XmlRpcValue::TypeInt);
+            r.type = robot->second["type"];
+
+            assert(robot->second["mass"].getType() == XmlRpc::XmlRpcValue::TypeDouble);
+            r.mass = robot->second["mass"];
+
+            assert(robot->second["radius"].getType() == XmlRpc::XmlRpcValue::TypeDouble);
+            r.radius = robot->second["radius"];
+
+            assert(robot->second["charge"].getType() == XmlRpc::XmlRpcValue::TypeDouble);
+            r.charge = robot->second["charge"];
+
+            assert(robot->second["bound"].getType() == XmlRpc::XmlRpcValue::TypeInt);
+            r.bound = robot->second["bound"];
+
+            assert(robot->second["orbitals"].getType() == XmlRpc::XmlRpcValue::TypeArray);
+            for (int p = 0; p < robot->second["orbitals"].size(); ++p)
+            {
+                int orbital = robot->second["orbitals"][p];
+                r.orbitals.push_back(orbital);
+                std::vector<unsigned int> t_;
+                r.binding.push_back(t_);
+            }
+
+            r.id = this->robots;
+            this->robots++;
+
+            // Get initial positions
+            r.position.x = 1.8 * this->worldsize * (((double)rand() / ((double)(RAND_MAX) + (double)(1))) - 0.5);
+            r.position.y = 1.8 * this->worldsize * (((double)rand() / ((double)(RAND_MAX) + (double)(1))) - 0.5);
+
+            // Get initial velocities
+            r.velocity.x = 1.8 * this->worldsize * (((double)rand() / ((double)(RAND_MAX) + (double)(1))) - 0.5);
+            r.velocity.y = 1.8 * this->worldsize * (((double)rand() / ((double)(RAND_MAX) + (double)(1))) - 0.5);
+            // std::cout << "Robot: " << r.id << " ( " << r.position.x << r.position.y << ") (" << r.velocity.x << "," << r.velocity.y << ")" << std::endl;
+
+            this->states.push_back(r);
+        }
+    }
 
     this->logging = false;
     ros::param::get("~log", this->logging);
@@ -36,192 +134,11 @@ Controller::Controller(ros::NodeHandle *nodehandle) : nh_(*nodehandle)
     }
     std::cout << this->logginfile << std::endl;
 
-    this->mass = 0.3;
-    this->vmax = 1.0;
-    this->dt = 0.02;
-
     ROS_INFO("%d %d %f", this->robots, this->groups, this->sensing);
     if (this->logging)
     {
         this->logfile.open(this->logginfile);
         ROS_INFO("\33[92mLog: %s\33[0m", logginfile.c_str());
-    }
-    std::istringstream ss(this->swarmconf);
-
-    int NUM = 18;
-    int count = 0;
-    for (int i = 0; i < this->robots; ++i)
-    {
-        Robot r;
-        float x, y, vx, vy, type;
-        ss >> x;
-        ss >> y;
-        ss >> vx;
-        ss >> vy;
-        ss >> type;
-        // Get initial positions
-        r.position.x = x;
-        r.position.y = y;
-
-        // Get initial velocities
-        r.velocity.x = vx;
-        r.velocity.y = vy;
-
-        r.anchor = false;
-        r.type = type;
-        r.id = i;
-        // r.bound = (unsigned int)(r.type + 1);
-        r.bounded = false;
-
-        //         if (r.type == 0)
-        // {
-        //     r.bound = 2;
-        //     r.orbitals.push_back(2); // Number of H
-        //     r.orbitals.push_back(1); // Number of C
-        //     r.orbitals.push_back(0); // Number of S
-        //     r.mass = 0.03;           //0.3;
-        // }
-        // else
-        // {
-        //     r.bound = 2;
-        //     r.orbitals.push_back(2); // Number of H
-        //     r.orbitals.push_back(0); // Number of C
-        //     r.orbitals.push_back(0); // Number of S
-        //     r.mass = 0.04;           //0.4;
-        // }
-
-        switch ((int)r.type)
-        {
-        case 0: /* H */
-            // r.bound = 1;
-            // r.orbitals.push_back(1); // Number of H
-            // r.orbitals.push_back(1); // Number of N
-            // r.orbitals.push_back(1); // Number of C
-            // r.mass = 0.1;            // Mass H
-            // r.radius = 53;           // Radius of H
-
-            r.bound = 1;             /* O */
-            r.orbitals.push_back(0); // Number of O
-            r.orbitals.push_back(1); // Number of C
-            r.orbitals.push_back(1); // Number of N
-            r.orbitals.push_back(0); // Number of N
-            r.mass = 1.8 * 0.1;      // Mass O
-            r.radius = 53;           // Radius of O
-            break;
-
-        case 1:
-            // r.bound = 3;             /* N */
-            // r.orbitals.push_back(3); // Number of H
-            // r.orbitals.push_back(0); // Number of N
-            // r.orbitals.push_back(1); // Number of C
-            // r.mass = 1.4;            // Mass O
-            // r.radius = 65;           // Radius of O
-
-            // r.bound = 2;             /* O */
-            // r.orbitals.push_back(2); // Number of H
-            // r.orbitals.push_back(0); // Number of N
-            // r.mass = 1.6;            // Mass O
-            // r.radius = 60;           // Radius of O
-
-            r.bound = 3;             /* C */
-            r.orbitals.push_back(2); // Number of H
-            r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(1); // Number of N
-            // r.orbitals.push_back(2); // Number of C
-            r.mass = 1.8 * 1.6; // Mass O
-            r.radius = 60;      // Radius of O
-            break;
-
-                    case 2:
-            // r.bound = 3;             /* N */
-            // r.orbitals.push_back(3); // Number of H
-            // r.orbitals.push_back(0); // Number of N
-            // r.orbitals.push_back(1); // Number of C
-            // r.mass = 1.4;            // Mass O
-            // r.radius = 65;           // Radius of O
-
-            // r.bound = 2;             /* O */
-            // r.orbitals.push_back(2); // Number of H
-            // r.orbitals.push_back(0); // Number of N
-            // r.mass = 1.6;            // Mass O
-            // r.radius = 60;           // Radius of O
-
-            r.bound = 4;             /* C */
-            r.orbitals.push_back(3); // Number of H
-            r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(0); // Number of N
-            r.orbitals.push_back(1); // Number of N
-            // r.orbitals.push_back(2); // Number of C
-            r.mass = 1.8 * 1.4; // Mass O
-            r.radius = 65;      // Radius of O
-            break;
-
-            // case 2:
-            //     r.bound = 4;             /* C */
-            //     r.orbitals.push_back(2); // Number of H
-            //     r.orbitals.push_back(1); // Number of N
-            //     r.orbitals.push_back(2); // Number of C
-            //     r.mass = 1.2;            // Mass O
-            //     r.radius = 70;           // Radius of O
-            //     // r.bound = 2;             /* O */
-            //     // r.orbitals.push_back(2); // Number of H
-            //     // r.orbitals.push_back(0); // Number of N
-            //     // r.mass = 1.6;            // Mass O
-            //     // r.radius = 60;           // Radius of O
-            //     break;
-
-            // case 2:
-            //     r.bound = 1;             /* C */
-            //     r.orbitals.push_back(0); // Number of H
-            //     r.orbitals.push_back(1); // Number of N
-            //     r.orbitals.push_back(0); // Number of C
-            //     r.mass = 0.5;            //0.4;
-            //     r.position.x = (6.0 * count / (NUM-1) - 6.0 / 2.0);
-            //     r.position.y = fabs(14.0 * count / (NUM-1) - 14.0 / 2.0) - 3;
-            //     r.anchor = true;
-            //     r.velocity.x = 0;
-            //     r.velocity.y = 0;
-            //     count++;
-            //     break;
-
-            // default:
-            //     break;
-        }
-
-        for (int k = 0; k < r.orbitals.size(); k++)
-        {
-            std::vector<unsigned int> t_;
-            r.binding.push_back(t_);
-        }
-        this->states.push_back(r);
-    }
-
-    // std::vector<Vector2> V_letter = {Vector2(-0.33, 0.27), Vector2(-0.09, 0.27), Vector2(-0.21, 0.25), Vector2(-0.18, 0.15), Vector2(-0.148, 0.05), Vector2(-0.11, -0.03), Vector2(-0.07, -0.12), Vector2(-0.04, -0.21), Vector2(-0.002, -0.29), Vector2(-0.002, -0.38), Vector2(0.06, -0.21), Vector2(0.098, -0.12), Vector2(0.13, -0.03), Vector2(0.16, 0.05), Vector2(0.20, 0.14), Vector2(0.23, 0.23), Vector2(0.17, 0.27), Vector2(0.30, 0.27)};
-    // std::vector<Vector2> V_letter = {Vector2(-0.28, 0.25), Vector2(-0.15, 0.25), Vector2(-0.02, 0.26), Vector2(0.08, 0.26), Vector2(0.19, 0.26), Vector2(-0.15, 0.15), Vector2(-0.15, 0.05), Vector2(-0.15, -0.04), Vector2(-0.05, -0.04), Vector2(0.02, -0.04), Vector2(0.12, -0.04), Vector2(-0.15, -0.15), Vector2(-0.15, -0.26), Vector2(-0.15, -0.37), Vector2(-0.28, -0.37), Vector2(-0.02, -0.38), Vector2(0.10, -0.37), Vector2(0.19, -0.36) };
-    // std::vector<Vector2> V_letter = {Vector2(-0.29, 0.26), Vector2(-0.19, 0.26), Vector2(-0.05, 0.26), Vector2(0.08, 0.24), Vector2(0.16, 0.15), Vector2(0.15, 0.03), Vector2(0.04, -0.04), Vector2(-0.06, -0.05), Vector2(-0.18, -0.04), Vector2(-0.18, 0.06), Vector2(-0.18, 0.16), Vector2(-0.18, -0.15), Vector2(-0.18, -0.25), Vector2(-0.18, -0.36), Vector2(-0.31, -0.37), Vector2(0.18, -0.36), Vector2(0.15, -0.26), Vector2(0.13, -0.15)};
-    // std::vector<Vector2> V_letter = {Vector2(-0.26, 0.26), Vector2(-0.16, 0.25), Vector2(-0.04, 0.26), Vector2(0.03, 0.26), Vector2(-0.13, 0.17), Vector2(-0.13, 0.08), Vector2(-0.13, 0.0017), Vector2(-0.13, -0.07), Vector2(-0.13, -0.16), Vector2(-0.13, -0.26), Vector2(-0.27, -0.37), Vector2(-0.03, -0.37), Vector2(0.05, -0.37), Vector2(0.14, -0.36), Vector2(0.20, -0.33), Vector2(0.23, -0.24), Vector2(0.24, -0.15), Vector2(-0.13, -0.36)  };
-    // std::vector<Vector2> V_letter = {Vector2(0.0047, 0.27), Vector2(-0.03, 0.18), Vector2(0.04, 0.17), Vector2(0.08, 0.08), Vector2(-0.07, 0.08), Vector2(-0.10, -0.01), Vector2(0.11, -0.0083), Vector2(0.13, -0.09), Vector2(-0.14, -0.11), Vector2(-0.08, -0.16), Vector2(0.0023, -0.16), Vector2(0.09, -0.16), Vector2(-0.17, -0.21), Vector2(0.18, -0.21), Vector2(0.21, -0.30), Vector2(-0.20, -0.31), Vector2(-0.23, -0.37), Vector2(0.25, -0.38)};
-    std::vector<Vector2> V_letter = {Vector2(-0.16, 0.26), Vector2(-0.16, 0.16), Vector2(-0.16, 0.06), Vector2(-0.16, -0.03), Vector2(-0.16, -0.14), Vector2(-0.16, -0.25), Vector2(-0.16, -0.36),  Vector2(-0.06, -0.37), Vector2(0.07, -0.37), Vector2(0.18, -0.32), Vector2(0.24, -0.25), Vector2(0.24, -0.15), Vector2(0.18, -0.08), Vector2(0.08, -0.04), Vector2(-0.05, -0.04), Vector2(0.18, 0.02), Vector2(0.22, 0.12), Vector2(0.19, 0.20), Vector2(0.10, 0.26), Vector2(-0.05, 0.26)   };
-
-    double scale = 10.0;
-    for (unsigned int i = 0; i < V_letter.size(); i++)
-    {
-
-        this->states[i].type = 3;
-        this->states[i].mass = 200;
-        this->states[i].radius = 20;
-        this->states[i].anchor = true;
-        this->states[i].bound = 1;
-        this->states[i].orbitals.clear();
-        this->states[i].orbitals.push_back(0); // Number of O
-        this->states[i].orbitals.push_back(i>6); // Number of C
-        this->states[i].orbitals.push_back(i <=6); // Number of X
-        this->states[i].orbitals.push_back(0); // Number of X
-        this->states[i].position.x = scale * V_letter[i].x;
-        this->states[i].position.y = scale * V_letter[i].y;
-        this->states[i].velocity.x = 0;
-        this->states[i].velocity.y = 0;
     }
 
     if (this->gui)
@@ -237,37 +154,46 @@ bool Controller::draw(int step)
 #define W_Y 1000
 
     cv::Mat board(W_Y, W_X, CV_8UC3, cv::Scalar(255, 255, 255));
-    // cv::Mat board = cv::imread("/home/rezeck/catkin_ws/src/gibbs_swarm_pattern_formation/world/background.png", cv::IMREAD_COLOR);
     cv::Scalar color;
     cv::rectangle(board, cv::Point(50, 50), cv::Point(W_X - 50, W_Y - 50), cv::Scalar(80, 80, 80), 4, 8);
 
     // cv::putText(board, std::to_string(step), cv::Point(board.cols / 2, 35), cv::FONT_HERSHEY_DUPLEX,
     //             0.6, CV_RGB(0, 0, 0), 1);
+
     cv::putText(board, "Steps: " + std::to_string(step), cv::Point(50, 35), cv::FONT_HERSHEY_TRIPLEX,
                 0.6, CV_RGB(80, 80, 80), 1);
-    // cv::putText(board, "Steps: " + std::to_string(this->metric_v), cv::Point(50, 35), cv::FONT_HERSHEY_DUPLEX,
-    // 0.6, CV_RGB(0, 0, 0), 1);
 
-    // float c = 300.0 / 5.0;
+    cv::putText(board, "MissBound: " + std::to_string(this->metric_v), cv::Point(300, 35), cv::FONT_HERSHEY_TRIPLEX,
+                0.6, CV_RGB(80, 80, 80), 1);
+
+    cv::putText(board, "ConsVel: " + std::to_string(this->consensus_metric_v), cv::Point(550, 35), cv::FONT_HERSHEY_TRIPLEX,
+                0.6, CV_RGB(80, 80, 80), 1);
+
+    cv::putText(board, "Molecules: " + std::to_string(this->molecules_metric), cv::Point(800, 35), cv::FONT_HERSHEY_TRIPLEX,
+                0.6, CV_RGB(80, 80, 80), 1);
+                
+
     float c = (W_Y - 100) / 10.0;
 
-#ifdef SHOW_VELOCITY
-    for (int i = 0; i < this->robots; i++)
+    if (this->show_velocity)
     {
-        Vector2 vel;
-        vel = this->saturation(this->states[i].velocity, 0.3);
-        vel.x = W_X / 2.0 + c * (this->states[i].position.x + vel.x);
-        vel.y = W_Y / 2.0 - c * (this->states[i].position.y + vel.y);
-        cv::arrowedLine(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(vel.x, vel.y), cv::Scalar(220, 220, 220), 2, 8);
+        for (int i = 0; i < this->robots; i++)
+        {
+            Vector2 vel;
+            vel = this->saturation(this->states[i].velocity, 0.3);
+            vel.x = W_X / 2.0 + c * (this->states[i].position.x + vel.x);
+            vel.y = W_Y / 2.0 - c * (this->states[i].position.y + vel.y);
+            cv::arrowedLine(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(vel.x, vel.y), cv::Scalar(220, 220, 220), 2, 8);
+        }
     }
-#endif
 
-#ifdef SHOW_SENSING
-    for (int i = 0; i < this->robots; i++)
+    if (this->show_sensing)
     {
-        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->sensing, cv::Scalar(240, 240, 240), 1, 8);
+        for (int i = 0; i < this->robots; i++)
+        {
+            cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->sensing, cv::Scalar(240, 240, 240), 1, 8);
+        }
     }
-#endif
 
     for (int i = 0; i < this->robots; i++)
     {
@@ -285,7 +211,7 @@ bool Controller::draw(int step)
             break; // blue violet
         case 3:
             // color = cv::Scalar(199, 21, 133);
-            color = cv::Scalar(50, 50, 50);
+            color = cv::Scalar(128, 0, 0);
             break; // medium violet red
         case 4:
             color = cv::Scalar(144, 238, 144);
@@ -377,28 +303,33 @@ bool Controller::draw(int step)
         // continue;
         // }
 
-        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].radius * 0.0021, color, -1, 8);
+        cv::circle(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), c * this->states[i].radius * 0.0020, color, -1, 8);
         // cv::circle(board, cv::Point(350 + c * this->states[i].position.x, 350 - c * this->states[i].position.y), c * 0.07, color, -1, 8);
-        // for (int k = 0; k < this->states[i].binding.size(); k++)
-        // {
-        //     for (int w = 0; w < this->states[i].binding[k].size(); w++)
-        //     {
-        //         cv::line(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(W_X / 2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y / 2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
-        //     }
-        // }
-#ifdef SHOW_ID
-        cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X / 2.0 + c * this->states[i].position.x + 4, W_Y / 2.0 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
-                    0.4, CV_RGB(0, 0, 0), 1);
-#endif
+        if (this->show_bounding)
+        {
+            for (int k = 0; k < this->states[i].binding.size(); k++)
+            {
+                for (int w = 0; w < this->states[i].binding[k].size(); w++)
+                {
+                    cv::line(board, cv::Point(W_X / 2.0 + c * this->states[i].position.x, W_Y / 2.0 - c * this->states[i].position.y), cv::Point(W_X / 2.0 + c * this->states[this->states[i].binding[k][w]].position.x, W_Y / 2.0 - c * this->states[this->states[i].binding[k][w]].position.y), cv::Scalar(112, 128, 144), 1);
+                }
+            }
+        }
+        if (this->show_id)
+        {
+            cv::putText(board, std::to_string((int)this->states[i].id), cv::Point(W_X / 2.0 + c * this->states[i].position.x + 4, W_Y / 2.0 - c * this->states[i].position.y - 4), cv::FONT_HERSHEY_DUPLEX,
+                        0.4, CV_RGB(0, 0, 0), 1);
+        }
     }
 
-#ifdef SHOW_OBSTACLES
-    for (int i = 0; i < this->obstacles.size(); i++)
+    if (this->show_obstacles)
     {
-        cv::circle(board, cv::Point(W_X / 2.0 + c * this->obstacles[i].x, W_Y / 2.0 - c * this->obstacles[i].y), c * 0.05, cv::Scalar(0, 0, 255), -1, 8);
+        for (int i = 0; i < this->obstacles.size(); i++)
+        {
+            cv::circle(board, cv::Point(W_X / 2.0 + c * this->obstacles[i].x, W_Y / 2.0 - c * this->obstacles[i].y), c * 0.05, cv::Scalar(0, 0, 255), -1, 8);
+        }
+        this->obstacles.clear();
     }
-    this->obstacles.clear();
-#endif
 
     cv::imshow("GRF-Pattern-Formation", board);
 #ifdef SAVE_FIGURES
@@ -428,15 +359,16 @@ double Controller::fof_Us(Robot r_i, Vector2 v)
     // Get potential for the sampled velocity
     double Us = 0.0f;
     // for each obstacles point in the world (same when using a laser)
-    std::vector<Vector2> obstacles = this->getObstaclesPoints(this->safezone, r_i.position);
+    std::vector<Vector2> obstacles = this->getObstaclesPoints(this->safezone*0.8, r_i.position);
     // ROS_INFO("Number of obstacles: %d", obstacles.size());
     for (int i = 0; i < obstacles.size(); ++i)
     {
-#ifdef SHOW_OBSTACLES
-        this->mutex.lock();
-        this->obstacles.push_back(obstacles[i]);
-        this->mutex.unlock();
-#endif
+        if (this->show_obstacles)
+        {
+            this->mutex.lock();
+            this->obstacles.push_back(obstacles[i]);
+            this->mutex.unlock();
+        }
         // ROS_INFO("Number of obstacles: %f %f", obstacles[i].x, obstacles[i].y);
         // lets compute the distance to the obstacle (we only use the distance)
         double dist = this->euclidean(r_i.position, obstacles[i]);
@@ -454,13 +386,9 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
     r_i.position.y = r_i.position.y + v.y * this->dt;
     // Get the sum of the relative velocity of all my neighbor and they mass
     Vector2 group_vrel;
-    double group_mass = r_i.mass; //this->mass;
+    double group_mass = r_i.mass;
     // Get the pairwise potential for the sampled velocity
     double Ust = 0.0f;
-
-    // #ifdef _OPENMP
-    // #pragma omp parallel for
-    // #endif
 
     // for each neighborn in current state
     // Neighborns should be already sorted by distance
@@ -472,11 +400,9 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         double dist = this->euclidean(r_i.position, n_p);
         // double dist = this->euclidean(r_i.position, states_t[i].position);
         // Indicator function f: 1 -> same type, f: -1 -> otherwise
-        double I = 2.0 * (int)(r_i.type == states_t[i].type) - 1.0;
+        double I = -0.00005;
+        // I = 0.2; // water and methane group molecules
 
-        I = -0.00005;
-
-        // I = 0.2;
         dist = dist * 0.80;
 
         if (states_t[i].type == r_i.type)
@@ -516,10 +442,10 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         }
 
         // if (r_i.type == 1 && states_t[i].type == 3)
-        if (states_t[i].type == 3)
-        {
-            dist = dist * 4.50;
-        }
+        // if (states_t[i].type == 3)
+        // {
+        //     dist = dist * 4.50;
+        // }
 
         // if (r_i.type == 0 && states_t[i].type == 3)
         // {
@@ -632,7 +558,7 @@ std::vector<Vector2> Controller::getObstaclesPoints(double sensing, Vector2 p)
 {
     /* World
              p3 o------o p4
-                |      |                            
+                |      |
                 |      |
              p1 o------o p2
     */
@@ -840,23 +766,20 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
 {
     /* Create a empty orbital structure - It will be the new r_i orbital structure. */
     std::vector<std::vector<int>> bound;
-    for (int orb = 0; orb < r_i.orbitals.size(); orb++)
+    for (int orb = 0; orb < (int)r_i.orbitals.size(); orb++)
     {
         std::vector<int> t_;
         bound.push_back(t_);
     }
 
-    double orbitalDist = this->safezone;
+    double orbitalDist = this->sensing;
     /* For each neighborn (n_j) of the robot (r_i): */
     /* Neighborns list (states_t) are already sorted by distance. */
-    for (int i = 0; i < states_t.size(); i++)
+    for (int i = 0; i < (int)states_t.size(); i++)
     {
         Robot n_j = states_t[i];
         /* Euclean distance from neighborn i */
         double dist = this->euclidean(r_i.position, n_j.position);
-#ifdef DEBUG_BINDING
-        std::cout << "- Evaluating robot # " << n_j.id << ": " << (int)!(dist > orbitalDist);
-#endif
 
         /* If the neighborn (r_j) is out the orbital distance: stop searching. */
         if (dist > orbitalDist)
@@ -868,34 +791,28 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
         bool isthereanyroom = false;
         unsigned int nbindingsofar = 0;
         /* For each orbital in the of the neighborn (n_j) */
-        for (int k = (n_j.binding.size() - 1); k >= 0; k--)
+        for (int k = ((int)n_j.binding.size() - 1); k >= 0; k--)
         {
             /* Is k the r_i robot orbital? */
             if (k == r_i.type)
             {
                 // is there any room for me?
-                isthereanyroom = ((n_j.binding[k].size() + nbindingsofar) < n_j.orbitals[k]);
-                // if (r_i.type == 1 && !isthereanyroom)
-                // {
-                //     isthereanyroom = ((n_j.binding[k + 1].size() + nbindingsofar) < n_j.orbitals[k + 1]);
-                // }
+                isthereanyroom = ( (unsigned int)n_j.binding[k].size()  < n_j.orbitals[k]);
+                isthereanyroom = isthereanyroom && ( ((unsigned int) n_j.binding[k].size() + nbindingsofar) < n_j.bound);
                 break;
             }
-            nbindingsofar += n_j.binding[k].size();
+            nbindingsofar += (unsigned int) n_j.binding[k].size();
         }
-#ifdef DEBUG_BINDING
-        std::cout << " |  " << (int)isthereanyroom;
-#endif
 
         /* Check if (n_j) has r_i in the binding list. There are already connected? */
         bool areweconnected = false;
         /* For each orbital in the of the neighborn (n_j) */
-        for (int k = (n_j.binding.size() - 1); k >= 0; k--)
+        for (int k = ((int)n_j.binding.size() - 1); k >= 0; k--)
         {
             if (areweconnected)
                 break;
             /* For each robot (y) is the orbital k */
-            for (int y = 0; y < n_j.binding[k].size(); y++)
+            for (int y = 0; y < (int)n_j.binding[k].size(); y++)
             {
                 /* Is it me? */
                 if ((n_j.binding[k][y]) == r_i.id)
@@ -905,25 +822,22 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
                 }
             }
         }
-#ifdef DEBUG_BINDING
-        std::cout << " |  " << (int)areweconnected;
-#endif
 
         /* Check if connecting n_j with r_i create inner cycle. */
         bool cycledetected = false;
         /* For each orbital (k) in the neighborn (n_j) */
-        for (int k = (n_j.binding.size() - 1); k >= 0; k--)
+        for (int k = ((int)n_j.binding.size() - 1); k >= 0; k--)
         {
             if (cycledetected)
                 break;
             /* For each robot (y) is the orbital (k) */
-            for (int y = 0; y < n_j.binding[k].size(); y++)
+            for (int y = 0; y < (int)n_j.binding[k].size(); y++)
             {
                 /* For each orbital (m) in the robot (r_i) */
-                for (int m = (bound.size() - 1); m >= 0; m--)
+                for (int m = ((int)bound.size() - 1); m >= 0; m--)
                 {
                     /* For each robot (x) in the orbital (m) */
-                    for (int w = 0; w < bound[m].size(); w++)
+                    for (int w = 0; w < (int)bound[m].size(); w++)
                     {
                         if (n_j.binding[k][y] == bound[m][w])
                         {
@@ -933,127 +847,32 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
                 }
             }
         }
-#ifdef DEBUG_BINDING
-        std::cout << " |  " << (int)cycledetected << std::endl;
-#endif
 
-        // bool bridging = true && (n_j.anchors.size() > 0) && (r_i.anchors.size() > 0);
-        // for (int s = 0; s < n_j.anchors.size(); s++)
-        // {
-        //     for (int t = 0; t < r_i.anchors.size(); t++)
-        //     {
-        //         if (n_j.anchors[s] == r_i.anchors[t])
-        //         {
-        //             bridging = false;
-        //         }
-        //     }
-        // }
-
-        if ((areweconnected || isthereanyroom) && !cycledetected)
+        if (((areweconnected || isthereanyroom) && !cycledetected))
         {
-            /* Is orbital (2) filled? */
-            // bool isorbitalfilled = (n_j.binding[2].size() > 0);
-            // if (isorbitalfilled && (r_i.type == 1))
-            // {
-            //     /* is the robot (r_i) there? */
-            //     bool amIthere = false;
-            //     /* For each robot (y) is the orbital k */
-            //     for (int y = 0; y < n_j.binding[2].size(); y++)
-            //     {
-            //         if (n_j.binding[2][y] == r_i.id)
-            //         {
-            //             amIthere = true;
-            //             break;
-            //         }
-            //     }
-            //     if (amIthere)
-            //     {
-            //         bound[1].push_back(n_j.id);
-            //     }
-            //     else
-            //     {
-            //         bound[2].push_back(n_j.id);
-            //     }
-            // }
-            // else
-            // {
             bound[n_j.type].push_back(n_j.id);
-            // }
-            // bound[n_j.type].push_back(n_j.id);
         }
     }
 
-#ifdef DEBUG_BINDING
-    for (int k = 0; k < r_i.binding.size(); k++)
-    {
-        std::cout << "  -> [" << k << "]: ";
-        for (int y = 0; y < bound[k].size(); y++)
-        {
-            std::cout << bound[k][y] << "  ";
-        }
-        std::cout << std::endl;
-    }
-#endif
-
-    //Update binding list
+    // Update binding list
     unsigned int num_binding = 0;
     /* For each orbital (k) in robot (r_i). */
-    // r_i.anchors.clear();
-    for (int k = (r_i.binding.size() - 1); k >= 0; k--)
+    for (int k = ((int)r_i.binding.size() - 1); k >= 0; k--)
     {
         /* Clear history of orbital */
         r_i.binding[k].clear();
 
-        /* Dropping element next orbital */
-        // if ((k == 2) && (bound[k].size() > r_i.orbitals[k]) && (bound[k - 1].size() == 0))
-        // {
-        //     for (int u = r_i.orbitals[k]; u < bound[k].size(); u++)
-        //     {
-        //         bound[1].push_back( bound[k][u]);
-        //         // bound[1].insert(bound[1].begin(), bound[k][u]);
-        //     }
-        // }
-
         /* For each robot (k) to be add to robot (r_i) orbital (i). */
-        for (int i = 0; i < bound[k].size(); i++)
+        for (int i = 0; i < (int)bound[k].size(); i++)
         {
             if ((i < r_i.orbitals[k]) && (num_binding < r_i.bound))
             {
-                // Robot n_i;
-                // for (int r = 0; r < states_t.size(); r++)
-                // {
-                //     if (states_t[r].id == bound[k][i])
-                //         n_i = states_t[r];
-                // }
-
-                // if ((n_i.type == 2) && (r_i.type == 1))
-                // {
-                //     r_i.anchors.push_back(bound[k][i]);
-                // }
-
-                // if ((n_i.type == 1) && (n_i.anchors.size() > 0)  && (r_i.type == 1)){
-                //      for (int a = 0; a < n_i.anchors.size(); a++){
-                //          r_i.anchors.push_back(n_i.anchors[a]);
-                //      }
-                // }
-
                 r_i.binding[k].push_back(bound[k][i]);
                 num_binding++;
             }
         }
     }
-
-    // sort( r_i.anchors.begin(), r_i.anchors.end() );
-    // r_i.anchors.erase( unique( r_i.anchors.begin(), r_i.anchors.end() ), r_i.anchors.end() );
-
-    if (num_binding == r_i.bound)
-    {
-        r_i.bounded = true;
-    }
-    else
-    {
-        r_i.bounded = false;
-    }
+    r_i.bounded = (num_binding == r_i.bound);
 }
 
 void Controller::update(long iterations)
@@ -1091,6 +910,19 @@ void Controller::update(long iterations)
     for (int i = 0; i < this->robots; ++i)
     {
         this->metropolisHastings(states_t[i], neighbors[i]);
+    }
+
+    // ClusterMetric metric(this->robots, this->groups, this->sensing * 1.2);
+    // this->metric_v = metric.compute(this->states);
+
+    Metric metric(this->robots, this->groups, this->sensing * 1.2);
+    this->consensus_metric_v = metric.consensus_metric(this->states);
+    this->metric_v = metric.miss_bounding_metric(this->states);
+    this->molecules_metric = metric.number_of_molecules_metric(this->states);
+
+    if (this->logging)
+    {
+        this->logfile << this->metric_v << "\n";
     }
 }
 
@@ -1138,14 +970,8 @@ int main(int argc, char **argv)
             porcente += 1;
         }
         iterations += 1;
-#ifdef BABYSTEP
-        cvok = (cv::waitKey(0) != 27);
-#endif
+        if (control.babystep)
+            cvok = (cv::waitKey(0) != 27);
     } while (ros::ok() && (iterations < max_it) && cvok);
-    // if (control.gui)
-    // {
-    //     cv::waitKey(0);
-    // }
-
     return 0;
 }
