@@ -4,7 +4,7 @@ robots:
     type: 0
     mass: 1.0
     radius: 53.0
-    charge: 5.0
+    charge: 8.0
     amount: 120
     bound: 1
     orbitals: [1, 1, 1, 1] # [hydrogen, oxygen, nitrogen, carbon]
@@ -22,16 +22,16 @@ robots:
     type: 2
     mass: 14.0
     radius: 65.0
-    charge: 10.00
+    charge: 11.00
     amount: 30
     bound: 3
-    orbitals: [3, 0, 0, 1] # [hydrogen, oxygen, nitrogen, carbon]     
+    orbitals: [2, 0, 0, 1] # [hydrogen, oxygen, nitrogen, carbon]     
 
   carbon: # Carbon-like robot
     type: 3
     mass: 12.0
     radius: 70.0
-    charge: 10.00
+    charge: 11.00
     amount: 30
     bound: 4
-    orbitals: [3, 0, 1, 2] # [hydrogen, oxygen, nitrogen, carbon]    
+    orbitals: [2, 0, 1, 1] # [hydrogen, oxygen, nitrogen, carbon]    
