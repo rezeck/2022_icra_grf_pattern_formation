@@ -1,5 +1,5 @@
 ---
-layout: single
+class: wide
 ---
 
 <!-- # Chemistry-Inspired Pattern Formation with Robotic Swarms -->
