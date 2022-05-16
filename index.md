@@ -1,3 +1,8 @@
+---
+layout: single
+classes: wide
+---
+
 <!-- # Chemistry-Inspired Pattern Formation with Robotic Swarms -->
 <!-- Dynamic Gibbs random field applied to swarm morphogenesis abstracting chemical binding mechanism. -->
 
