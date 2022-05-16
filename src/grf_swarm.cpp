@@ -788,14 +788,14 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
             if (k == r_i.type)
             {
                 // is there any room for me?
-                isthereanyroom = ((unsigned int)n_j.binding[k].size() < n_j.orbitals[k]);
-                isthereanyroom = isthereanyroom && (((unsigned int)n_j.binding[k].size() + nbindingsofar) < n_j.bound);
+                isthereanyroom = ((int)n_j.binding[k].size() < (int)n_j.orbitals[k]);
+                isthereanyroom = isthereanyroom && (((int)n_j.binding[k].size() + (int)nbindingsofar) < (int)n_j.bound);
                 break;
             }
             nbindingsofar += (unsigned int)n_j.binding[k].size();
         }
 
-        /* Check if (n_j) has r_i in the binding list. There are already connected? */
+        /* Check if (n_j) has r_i in the binding list. Are they already connected? */
         bool areweconnected = false;
         /* For each orbital in the of the neighborn (n_j) */
         for (int k = ((int)n_j.binding.size() - 1); k >= 0; k--)
@@ -806,7 +806,7 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
             for (int y = 0; y < (int)n_j.binding[k].size(); y++)
             {
                 /* Is it me? */
-                if ((n_j.binding[k][y]) == r_i.id)
+                if ((int)n_j.binding[k][y] == (int)r_i.id)
                 {
                     areweconnected = true;
                     break;
@@ -830,16 +830,20 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
                     /* For each robot (x) in the orbital (m) */
                     for (int w = 0; w < (int)bound[m].size(); w++)
                     {
-                        if (n_j.binding[k][y] == bound[m][w])
+                        if ((int)n_j.binding[k][y] == (int)bound[m][w])
                         {
                             cycledetected = true;
                         }
                     }
+                    if (cycledetected)
+                        break;
                 }
+                if (cycledetected)
+                    break;
             }
         }
 
-        if (((areweconnected || isthereanyroom) && !cycledetected))
+        if ((areweconnected || isthereanyroom) && !cycledetected)
         {
             bound[n_j.type].push_back(n_j.id);
         }
@@ -850,20 +854,20 @@ void Controller::updateBinding(Robot &r_i, std::vector<Robot> states_t)
     /* For each orbital (k) in robot (r_i). */
     for (int k = ((int)r_i.binding.size() - 1); k >= 0; k--)
     {
-        /* Clear history of orbital */
+        /* Clear history of orbital k */
         r_i.binding[k].clear();
 
         /* For each robot (k) to be add to robot (r_i) orbital (i). */
         for (int i = 0; i < (int)bound[k].size(); i++)
         {
-            if ((i < r_i.orbitals[k]) && (num_binding < r_i.bound))
+            if (((int)i < (int)r_i.orbitals[k]) && ((int)num_binding < (int)r_i.bound))
             {
                 r_i.binding[k].push_back(bound[k][i]);
                 num_binding++;
             }
         }
     }
-    r_i.bounded = (num_binding == r_i.bound);
+    r_i.bounded = ((int)num_binding == (int)r_i.bound);
 }
 
 void Controller::update(long iterations)

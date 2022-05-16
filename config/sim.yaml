@@ -12,5 +12,5 @@ sensing: 0.8                       # Maximum sensing range
 safezone: 0.8                    # Safezone range
 velocity: 1.0                      # Max velocity
 dt:  0.02                              # Sim steps
-babystep: true                # Step by step simulation
+babystep: false                # Step by step simulation
 log: true                            # Enable logging

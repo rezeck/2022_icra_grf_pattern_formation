@@ -16,7 +16,7 @@ robots:
     charge: 15.00
     amount: 130
     bound: 2
-    orbitals: [0, 1, 0, 1] # [hydrogen, oxygen, nitrogen, carbon]
+    orbitals: [0, 2, 0, 1] # [hydrogen, oxygen, nitrogen, carbon]
 
   nitrogen: # Nitrogen-like robot
     type: 2
