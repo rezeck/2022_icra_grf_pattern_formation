@@ -1,4 +1,4 @@
 theme: jekyll-theme-slate
 title: Chemistry-Inspired Pattern Formation with Robotic Swarms
 email: rezeck@dcc.ufmg.br
-
+description: Dynamic Gibbs random field applied to swarm morphogenesis abstracting chemical binding mechanism.
