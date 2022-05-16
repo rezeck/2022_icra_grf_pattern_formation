@@ -1,7 +1,7 @@
 # Chemistry-Inspired Pattern Formation with Robotic Swarms
 ## 2022 IEEE RA-L with ROS
 
-[![IMAGE ALT TEXT HERE](media/video.png)](https://www.youtube.com/watch?v=y7ls4djT3W4)
+<iframe width="560" height="315" src="https://www.youtube.com/embed/y7ls4djT3W4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 Dynamic Gibbs random field applied to swarm morphogenesis abstracting chemical binding mechanism.
 
