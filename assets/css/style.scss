@@ -1345,6 +1345,14 @@ body>div.header-wrapper>div>div.banner {
 	transition: all .2s ease-in-out
 }
 
+.youtube iframe {
+	display: block;
+	position: absolute;
+	right: 5px;
+	top: 6px;
+	z-index: 1
+}
+
 .facebook1 iframe {
 	display: block;
 	position: absolute;
