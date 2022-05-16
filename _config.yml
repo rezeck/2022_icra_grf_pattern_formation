@@ -1,3 +1,6 @@
 theme: jekyll-theme-slate
 title: Chemistry-Inspired Pattern Formation with Robotic Swarms
 email: rezeck@dcc.ufmg.br
+
+layout: single
+classes: wide
