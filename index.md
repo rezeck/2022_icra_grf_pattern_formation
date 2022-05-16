@@ -1,37 +1,55 @@
-## Welcome to GitHub Pages
+# Chemistry-Inspired Pattern Formation with Robotic Swarms
+## 2022 IEEE RA-L with ROS
 
-You can use the [editor on GitHub](https://github.com/rezeck/gibbs_swarm_pattern_formation/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+[![IMAGE ALT TEXT HERE](media/video.png)](https://www.youtube.com/watch?v=y7ls4djT3W4)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+Dynamic Gibbs random field applied to swarm morphogenesis abstracting chemical binding mechanism.
 
-### Markdown
+## Abstract
+```Self-organized emergent patterns can be widely seen in particle interactions producing complex structures such as chemical elements and molecules. Inspired by these interactions, this work presents a novel stochastic approach that allows a swarm of heterogeneous robots to create emergent patterns in a completely decentralized fashion and relying only on local information. Our approach consists of modeling the swarm configuration as a dynamic Gibbs Random Field (GRF) and setting constraints on the neighborhood system inspired by chemistry rules that dictate binding polarity between particles. Using the GRF model, we determine velocities for each robot, resulting in behaviors that lead to the emergence of patterns or shapes. Simulated experiments show the versatility of the approach in producing a variety of patterns, and experiments with a group of physical robots show the feasibility in potential applications.```
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Media
+- [Video](https://youtu.be/y7ls4djT3W4)
 
-```markdown
-Syntax highlighted code block
+## Dependecies
 
-# Header 1
-## Header 2
-### Header 3
+-  [ROS Melodic](http://wiki.ros.org/melodic/Installation)
+-  [Gazebo 11](http://gazebosim.org/download)
+- [Hero Common](https://github.com/verlab/hero_common)
 
-- Bulleted
-- List
+## Installation
 
-1. Numbered
-2. List
+-   Using git (or download the zip file) clone this repository into the "source code" folder of your ROS workspace (e.g. ~/catkin_ws/src ).
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```sh
+$ cd ~/catkin_ws/src
+$ git clone https://github.com/rezeck/gibbs_swarm_pattern_formation.git
+$ git clone https://github.com/verlab/hero_common.git # for gazebo simulations and real robots
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+-   Fixing package dependencies:
 
-### Jekyll Themes
+```sh
+$ cd ~/catkin_ws
+$ rosstack profile && rospack profile
+$ rosdep install --from-paths src/gibbs_swarm_pattern_formation --ignore-src -r -y
+```
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/rezeck/gibbs_swarm_pattern_formation/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+## Usage
+### Numeric Simulations
+```sh
+$ roslaunch gibbs_swarm_pattern_formation grf_swarm.launch
+```
 
-### Support or Contact
+### Gazebo Simulations
+```sh
+$ roslaunch hero_gazebo gazebo_bringup.launch
+$ roslaunch hero_gazebo env_spawn_bridge.launch
+$rosrun gibbs_swarm_pattern_formation gibbs_swarm_pattern_formation_gazebo
+```
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### Real Robots
+```sh
+$ roslaunch hero_bringup hero_bringup.launch
+$ rosrun gibbs_swarm_pattern_formation gibbs_swarm_pattern_formation_real
+```
