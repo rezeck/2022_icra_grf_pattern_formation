@@ -52,7 +52,7 @@ $ roslaunch gibbs_swarm_pattern_formation grf_swarm.launch
 ```sh
 $ roslaunch hero_gazebo gazebo_bringup.launch
 $ roslaunch hero_gazebo env_spawn_bridge.launch
-$rosrun gibbs_swarm_pattern_formation gibbs_swarm_pattern_formation_gazebo
+$ rosrun gibbs_swarm_pattern_formation gibbs_swarm_pattern_formation_gazebo
 ```
 
 ### Real Robots
