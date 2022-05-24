@@ -68,7 +68,7 @@ log: true                  # Enable logging
 
 Use another configuration file to set the swarm properties. For example,
 ```sh
-cat oxocarbons.yaml
+$ cat oxocarbons.yaml
 # Heterogeneity
 robots:
   hydrogen:                 # Hygrogen-like robot
@@ -110,7 +110,7 @@ robots:
 
 Finally, create a launch file that runs a simulation. For example,
 ```sh
-cat oxocarbon.launch
+$ cat oxocarbon.launch
 <launch>
     <group ns="$(anon grf_controller)">
         <rosparam command="load" file="$(find gibbs_swarm_pattern_formation)/config/sim.yaml" />
