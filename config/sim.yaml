@@ -1,16 +1,17 @@
 # Simulation Parameter
-gui: true                               # Show GUI Simulation
-show_velocity: true
-show_sensing: false
-show_id: false
-show_obstacles: false
-show_bounding: true
-world: 10                               # World size
-seed: 1                                 # Random Seed
-iterations: 20000             # Maximum of iterations
-sensing: 0.8                       # Maximum sensing range
-safezone: 0.8                    # Safezone range
-velocity: 1.0                      # Max velocity
-dt:  0.02                              # Sim steps
-babystep: false                # Step by step simulation
-log: true                            # Enable logging
+gui: true                                           # Show GUI Simulation
+show_velocity: true                     # Show velocity vector
+show_sensing: false                    # Show sensing range
+show_id: false                               # Show robots ids
+show_obstacles: false                # Show obstacles detection
+show_bounding: true                 # Show bounding
+# Environment Parameter
+world: 10                                        # World size (10 x 10)
+seed: 1                                            # Random Seed
+iterations: 20000                        # Maximum number of iterations
+sensing: 0.8                                  # Maximum sensing range
+safezone: 0.8                               # Safezone range
+velocity: 1.0                                 # Max velocity
+dt:  0.02                                        # Sim steps
+babystep: false                          # Step by step simulation (use keyboard to step the simulation)
+log: true                                       # Enable logging

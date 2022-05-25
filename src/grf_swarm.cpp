@@ -408,14 +408,14 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
         // Indicator function f: 1 -> same type, f: -1 -> otherwise
         double I = -0.00005;
         // I = 0.2; // water and methane group molecules
-        I = -0.0005;
+        I = -0.5;
         dist = dist * 0.70;
 
         /* Hydrogen bouding */
-        // if (r_i.type == 0 || states_t[i].type == 0)
-        // {
-        //     I = 7;
-        // }
+        if (r_i.type == 0 || states_t[i].type == 0)
+        {
+            I = 7;
+        }
         // if (r_i.type == 0 && states_t[i].type == r_i.type)
         // {
         //     if (r_i.binding[1].size() > 0 && states_t[i].binding[1].size() > 0)
@@ -437,7 +437,7 @@ double Controller::fof_Ust(Robot r_i, Vector2 v, std::vector<Robot> states_t)
                     {
                         // I = 3;
                         // dist = dist * 1.4;
-                        I = r_i.charge * states_t[i].charge; // * 5.0 / 3.0; // 4
+                        I = r_i.charge * states_t[i].charge * 5.0 / 3.0; // 4
                         //  dist = dist * 0.6;
                     }
                     else
