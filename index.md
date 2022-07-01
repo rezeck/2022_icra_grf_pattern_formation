@@ -15,8 +15,8 @@ class: wide
   </div>
 
 ## Publication
-- Submitted to 2022 IEEE RA-L with ROS
-- Pre-print(comming soon)
+- Accepted for publication in the 2022 IEEE RA-L and presented at IROS
+- [Pre-print](https://arxiv.org/abs/2206.03388)
 
 ## Dependecies
 
